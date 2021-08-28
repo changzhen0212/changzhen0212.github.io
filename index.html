@@ -172,7 +172,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-28 15:29:30 / 修改时间：17:52:25" itemprop="dateCreated datePublished" datetime="2021-08-28T15:29:30+08:00">2021-08-28</time>
+              <time title="创建时间：2021-08-28 15:29:30 / 修改时间：22:43:05" itemprop="dateCreated datePublished" datetime="2021-08-28T15:29:30+08:00">2021-08-28</time>
             </span>
 
           
@@ -186,9 +186,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <meta name="referrer" content="no-referrer">
-
-<h2 id="索引的本质"><a href="#索引的本质" class="headerlink" title="索引的本质"></a>索引的本质</h2><p>索引是帮助MySQL高效获取数据的<strong>排好序</strong>的<strong>数据结构</strong></p>
+          <h2 id="索引的本质"><a href="#索引的本质" class="headerlink" title="索引的本质"></a>索引的本质</h2><p>索引是帮助MySQL高效获取数据的<strong>排好序</strong>的<strong>数据结构</strong></p>
 <h2 id="索引的数据结构"><a href="#索引的数据结构" class="headerlink" title="索引的数据结构"></a>索引的数据结构</h2><ul>
 <li>二叉树</li>
 <li>红黑树</li>
@@ -200,13 +198,13 @@
 <blockquote>
 <p>弊端：如果是线性数据，都存在右侧，对查询速度没有帮助。</p>
 </blockquote>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828154535.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223710.png"></p>
 <h3 id="红黑树（Red-Black-Tree）"><a href="#红黑树（Red-Black-Tree）" class="headerlink" title="红黑树（Red/Black Tree）"></a>红黑树（Red/Black Tree）</h3><p>​    二叉平衡树</p>
 <blockquote>
 <p>弊端：数据量较大时（千万级），如果数据在叶子节点上，树的高度不可控。</p>
 <p>树的查找都是从根节点开始查找的，从头开始找，如果树的高度达到20，需要遍历20次才能找到数据</p>
 </blockquote>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828154729.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223743.png"></p>
 <h3 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B-Tree"></a>B-Tree</h3><p>红黑树的优化，在磁盘上开辟一块空间，专门存放索引(数据叶)，横向存放的数据越多，树的高度越小</p>
 <p>特性：</p>
 <ul>
@@ -214,7 +212,7 @@
 <li>所有的索引元素不重复</li>
 <li>节点中的数据索引从左到右递增排列</li>
 </ul>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828155544.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223804.png"></p>
 <h3 id="B-Tree（B-Tree的变种）"><a href="#B-Tree（B-Tree的变种）" class="headerlink" title="B+Tree（B-Tree的变种）"></a>B+Tree（B-Tree的变种）</h3><p>所有的数据都挪到叶子节点，叶子节点包含了所有元素。每一个元素从左到右依次递增排好序，每个节点的数据都大于他父节点左边的元素，小于父节点右边的元素</p>
 <p>特性：</p>
 <ul>
@@ -222,8 +220,8 @@
 <li>叶子节点包含所有索引字段</li>
 <li>叶子节点用指针连接，双箭头（用磁盘一小块空间存储上一个和下一个节点的位置），提高去兼访问的性能</li>
 </ul>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828162618.png"></p>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828155934.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223827.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223906.png"></p>
 <p><strong>注：绿色部分存放的是索引，白色部分存放的是下一个节点区间的地址，紫色部分(以最底层叶子节点为例)可能是15这个索引所在行的文件地址，也可能是15所在行的所有的其他列，与存储引擎有关</strong></p>
 <p>查询过程：</p>
 <blockquote>
@@ -236,7 +234,7 @@
 <p>根节点的默认内存 </p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">GLOBAL</span> STATUS <span class="keyword">LIKE</span> <span class="string">&#x27;innodb_page_size&#x27;</span>;</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828160802.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828224004.png"></p>
 <p><code>16384 = 16KB</code></p>
 <p>一次查询中，最耗时的操作是把节点元素load到内存中，在内存中定位数据是很快的。</p>
 <p>根节点16KB大约能存放的数据，参考上图</p>
@@ -249,7 +247,7 @@
 <li>Hash冲突问题</li>
 </ul>
 <p><strong>更多的时候选择的是B+Tree，因为Hash仅支持<code>=</code>，<code>IN</code>，不支持大于小于等范围查询</strong></p>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828164400.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828224133.png"></p>
 <h2 id="存储引擎InnoDB和MyISAM"><a href="#存储引擎InnoDB和MyISAM" class="headerlink" title="存储引擎InnoDB和MyISAM"></a>存储引擎InnoDB和MyISAM</h2><h3 id="InnoDB"><a href="#InnoDB" class="headerlink" title="InnoDB"></a>InnoDB</h3><p>聚集索引：叶子节点包含了完整的数据结构</p>
 <ul>
 <li>表数据文件本身就说按B+Tree组织的一个索引结构文件</li>
@@ -258,16 +256,16 @@
 <li>非聚集索引结构，叶子节点存储的是主键值，主要是节省存储空间，一致性</li>
 <li>耳机索引最后的叶子节点保存的是主键，再通过主键查找到数据</li>
 </ul>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828164546.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828224214.png"></p>
 <h3 id="MyISAM"><a href="#MyISAM" class="headerlink" title="MyISAM"></a>MyISAM</h3><p>非聚集索引：索引文件和数据文件是分离的</p>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828164641.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828224233.png"></p>
 <h3 id="联合索引"><a href="#联合索引" class="headerlink" title="联合索引"></a>联合索引</h3><ul>
 <li>多个字段共同组织成一个索引</li>
 <li>最左前缀原理（左列原理），按照索引创建的先后顺序维护到字典，还是B+Tree，按照索引顺序维护</li>
 <li>查询到主键，再根据主键查询数据</li>
 <li>联合索引必须按顺序使用，不能跳过前面的索引，跳过则不走索引，索引查询原理主要是根据<strong>排好序</strong>的原理，如果跳过前面的索引，后面就不是排好序了。</li>
 </ul>
-<p><img src="http://qyhi6q098.hb-bkt.clouddn.com/img/20210828171422.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828224254.png"></p>
 <h2 id="面试题"><a href="#面试题" class="headerlink" title="面试题"></a>面试题</h2><h3 id="B-Tree和B-Tree为什么最后选择的B-Tree？"><a href="#B-Tree和B-Tree为什么最后选择的B-Tree？" class="headerlink" title="B-Tree和B+Tree为什么最后选择的B+Tree？"></a>B-Tree和B+Tree为什么最后选择的B+Tree？</h3><blockquote>
 <p>如果存放2000万的数据，B-Tree每个节点同时存放索引和数据，一行最多存放16个元素，计算16的n次方=2000万，n的结果要远远大于3；</p>
 <p>B+Tree的高度是由非叶子节点存放的元素觉得的，叶子节点存放的索引越多，高度越小，查找次数越少</p>
@@ -335,7 +333,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-28 22:30:52" itemprop="dateModified" datetime="2021-08-28T22:30:52+08:00">2021-08-28</time>
+                <time title="修改时间：2021-08-28 22:35:48" itemprop="dateModified" datetime="2021-08-28T22:35:48+08:00">2021-08-28</time>
               </span>
 
           
@@ -364,11 +362,6 @@
 <h6 id="hexo-new-39-文章标题-39-格式"><a href="#hexo-new-39-文章标题-39-格式" class="headerlink" title="hexo new &#39;文章标题&#39;格式"></a><code>hexo new &#39;文章标题&#39;</code>格式</h6><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: postName #文章页面上的显示名称，一般是中文</span><br><span class="line">date: 2013-12-02 15:30:16 #文章生成时间，一般不改，当然也可以任意修改</span><br><span class="line">categories: 默认分类 #分类</span><br><span class="line">tags: [tag1,tag2,tag3] #文章标签，可空，多标签请用格式，注意:后面有个空格</span><br><span class="line"><span class="section">description: 附加一段文章摘要，字数最好在140字以内，会出现在meta的description里面</span></span><br><span class="line"><span class="section">---</span></span><br><span class="line"></span><br><span class="line">正文...</span><br><span class="line">正文...</span><br></pre></td></tr></table></figure>
 
 
-
-<h6 id="Hexo引用网络图片无法显示问题"><a href="#Hexo引用网络图片无法显示问题" class="headerlink" title="Hexo引用网络图片无法显示问题"></a>Hexo引用网络图片无法显示问题</h6><p>在文章头部加入代码</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;referrer&quot;</span> <span class="attr">content</span>=<span class="string">&quot;no-referrer&quot;</span>/&gt;</span></span></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223032.png"></p>
 
       
     </div>
@@ -411,10 +404,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-08-27 23:03:00 / 修改时间：23:05:51" itemprop="dateCreated datePublished" datetime="2021-08-27T23:03:00+08:00">2021-08-27</time>
+              <time title="创建时间：2021-08-27 23:03:00" itemprop="dateCreated datePublished" datetime="2021-08-27T23:03:00+08:00">2021-08-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-28 22:36:41" itemprop="dateModified" datetime="2021-08-28T22:36:41+08:00">2021-08-28</time>
+              </span>
 
           
 
@@ -429,17 +428,24 @@
       
           <h3 id="搭建Github博客成功，记录一下"><a href="#搭建Github博客成功，记录一下" class="headerlink" title="搭建Github博客成功，记录一下"></a>搭建Github博客成功，记录一下</h3><p>开启<code>shadowsocks</code>本地<code>Git Bash</code>执行<code>clone</code>操作时失败解决方案</p>
 <p>在开启<code>shadowsocks</code>的前提下，手动配置git的代理。git客户端输入如下两个命令就可以了。</p>
-<pre class="line-numbers language-sh" data-language="sh"><code class="language-sh">git config --global http.proxy http:&#x2F;&#x2F;127.0.0.1:1080
-
-git config --global https.proxy http:&#x2F;&#x2F;127.0.0.1:1080</code></pre>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git config --global http.proxy http://127.0.0.1:1080</span><br><span class="line"></span><br><span class="line">git config --global https.proxy http://127.0.0.1:1080</span><br></pre></td></tr></table></figure>
 
 <blockquote>
 <p>http://也可以改成sockets5://,但是区别在于：socks5不支持通过pubkey免密登录github，每次提交代码只能输入用户名和密码。http可以支持免密登录。</p>
 </blockquote>
-<h6 id="取消代理："><a href="#取消代理：" class="headerlink" title="取消代理："></a>取消代理：</h6><pre class="line-numbers language-sh" data-language="sh"><code class="language-sh">git config --global --unset http.proxy
+<h6 id="取消代理："><a href="#取消代理：" class="headerlink" title="取消代理："></a>取消代理：</h6><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git config --global --<span class="built_in">unset</span> http.proxy</span><br><span class="line"></span><br><span class="line">git config --global --<span class="built_in">unset</span> https.proxy</span><br></pre></td></tr></table></figure>
 
-git config --global --unset https.proxy</code></pre>
 
+
+<h6 id="Hexo引用网络图片无法显示问题"><a href="#Hexo引用网络图片无法显示问题" class="headerlink" title="Hexo引用网络图片无法显示问题"></a>Hexo引用网络图片无法显示问题</h6><p>在文章头部加入代码</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;referrer&quot;</span> <span class="attr">content</span>=<span class="string">&quot;no-referrer&quot;</span>/&gt;</span></span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/img/20210828223032.png"></p>
+<blockquote>
+<p>上一种方法适合引入外链无法正常显示。</p>
+<p><code>github.io</code>是<code>https</code>访问，当前图床使用的是七牛云的临时域名，只能用<code>http</code>，所以无法显示。</p>
+<p>此时暂时改用Gtihub图床，等域名备案后绑定七牛云做<code>SSL</code>认证即可</p>
+</blockquote>
 
       
     </div>
