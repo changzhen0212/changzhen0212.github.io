@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"changzhen0212.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="常量池存放的是编译期生成的字面量和符号引用  字面量：字面量就是指由字母、数字等构成的字符串或者数值常量。  字面量只能以右值方式出现，就是等号右边的值。  12int a &#x3D; 1;String s &#x3D; &quot;abc&quot;;  ​    1和”abc”都是字面量。  符号引用：属于编译原理方面的概念,是相对于直接引用来说的，主要包括下面几类常量： 被模块导出或者开放的包（Package">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常量池">
+<meta property="og:url" content="http://changzhen0212.github.io/2022/01/19/JVM/JVM-09-JVM%E5%B8%B8%E9%87%8F%E6%B1%A0/index.html">
+<meta property="og:site_name" content="ChangZhen&#39;s Blog">
+<meta property="og:description" content="常量池存放的是编译期生成的字面量和符号引用  字面量：字面量就是指由字母、数字等构成的字符串或者数值常量。  字面量只能以右值方式出现，就是等号右边的值。  12int a &#x3D; 1;String s &#x3D; &quot;abc&quot;;  ​    1和”abc”都是字面量。  符号引用：属于编译原理方面的概念,是相对于直接引用来说的，主要包括下面几类常量： 被模块导出或者开放的包（Package">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191022484.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201182158107.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191134875.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191146449.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191436390.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191455699.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191532444.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191546129.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191552252.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191637086.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191626195.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201192209581.png">
+<meta property="article:published_time" content="2022-01-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-27T15:15:42.263Z">
+<meta property="article:author" content="ChangZhen">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.changzhen0212.cn/img/202201191022484.png">
+
+<link rel="canonical" href="http://changzhen0212.github.io/2022/01/19/JVM/JVM-09-JVM%E5%B8%B8%E9%87%8F%E6%B1%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>常量池 | ChangZhen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ChangZhen's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://changzhen0212.github.io/2022/01/19/JVM/JVM-09-JVM%E5%B8%B8%E9%87%8F%E6%B1%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head_icon.jpg">
+      <meta itemprop="name" content="ChangZhen">
+      <meta itemprop="description" content="不忘初心，方得始终">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ChangZhen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          常量池
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-19 00:00:00" itemprop="dateCreated datePublished" datetime="2022-01-19T00:00:00+08:00">2022-01-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-27 23:15:42" itemprop="dateModified" datetime="2022-03-27T23:15:42+08:00">2022-03-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/" itemprop="url" rel="index"><span itemprop="name">Java技术栈</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>常量池存放的是编译期生成的字面量和符号引用</p>
+<ul>
+<li><p>字面量：字面量就是指由字母、数字等构成的字符串或者数值常量。</p>
+<ul>
+<li>字面量只能以右值方式出现，就是等号右边的值。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">String s = <span class="string">&quot;abc&quot;</span>;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>​    1和”abc”都是字面量。</p>
+<ul>
+<li>符号引用：属于编译原理方面的概念,是相对于直接引用来说的，主要包括下面几类常量：<ul>
+<li>被模块导出或者开放的包（Package）</li>
+<li>类和接口的全限定名（Fully Qualified Name）</li>
+<li>字段的名称和描述符（Descriptor）</li>
+<li>方法的名称和描述符</li>
+<li>方法句柄和方法类型（Method Handle、Method Type、Invoke Dynamic）</li>
+<li>动态调用点和动态常量（Dynamically-Computed Call Site、Dynamically-Computed Constant）</li>
+</ul>
+上面代码中，a s 是字段名称，就是一种符号引用。</li>
+</ul>
+<h2 id="常量池："><a href="#常量池：" class="headerlink" title="常量池："></a>常量池：</h2><ul>
+<li>静态常量池</li>
+<li>运行时常量池</li>
+<li>字符串常量池</li>
+<li>八种数据类型的包装类常量池</li>
+</ul>
+<h2 id="静态常量池和运行时常量池"><a href="#静态常量池和运行时常量池" class="headerlink" title="静态常量池和运行时常量池"></a>静态常量池和运行时常量池</h2><p>上面说的字面量和符号引用，在编译成.class文件的时候以静态的形式保存，就是<strong>静态常量池</strong>。当class文件被加载到内存中，这些符号会有对应的内存地址信息，这些常量池装入内存就是<strong>运行时常量池</strong>。</p>
+<p><strong>动态链接</strong>：符号引用在程序加载或者运行时被转变成内存区域代码的直接引用。</p>
+<h2 id="字符串常量池"><a href="#字符串常量池" class="headerlink" title="字符串常量池"></a>字符串常量池</h2><p>常量池可以理解为是一个缓存池。把相同的字符串缓存起来，下次使用直接拿</p>
+<p>JVM对字符串优化：</p>
+<ul>
+<li>为字符串开辟一个常量池，类似缓存取</li>
+<li>创建字符串常量时，先去字符串常量池用equals()判断是否有这个字符串的字面量<ul>
+<li>如果存在，返回引用实例。</li>
+<li>不存在，实例化该字符串放入常量池。</li>
+</ul>
+</li>
+</ul>
+<p>字符串常量池位置</p>
+<ul>
+<li><p>JDK&lt;=1.6，有永久代，运行时常量池放在永久代，运行时常量池包含字符串常量池</p>
+</li>
+<li><p>JDK=1.7，有永久代，但是已经逐步「去永久代」，字符串常量池从运行时常量池分离出来放在堆里。永久代中主要存放的是「类型信息」</p>
+</li>
+<li><p>JDK&gt;=1.8，取消永久代，由元空间取代，运行时常量池在元空间，字符串常量池在堆里。</p>
+</li>
+</ul>
+<p>代码验证,字符串常量池在堆中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * jdk6：-Xms6M -Xmx6M -XX:PermSize=6M -XX:MaxPermSize=6M</span></span><br><span class="line"><span class="comment">    * jdk8：-Xms6M -Xmx6M -XX:MetaspaceSize=6M -XX:MaxMetaspaceSize=6M</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">       ArrayList&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++) &#123;</span><br><span class="line">           String str = String.valueOf(i).intern();</span><br><span class="line">           list.add(str);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://image.changzhen0212.cn/img/202201191022484.png"></p>
+<h3 id="三种字符串操作"><a href="#三种字符串操作" class="headerlink" title="三种字符串操作"></a>三种字符串操作</h3><h4 id="直接赋值-只会在常量池中。"><a href="#直接赋值-只会在常量池中。" class="headerlink" title="直接赋值,只会在常量池中。"></a><strong>直接赋值,只会在常量池中。</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">&quot;abc&quot;</span>; <span class="comment">// s指向常量池中的引用</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="new-String"><a href="#new-String" class="headerlink" title="new String();"></a><strong>new String();</strong></h4><p>用new String()创建的字符串不是常量，不能在编译期就确定</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;abc&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>先在常量池中检查是否存在。</p>
+<ul>
+<li>如果不存在，先在字符串常量池中创建一个字符串对象，再从堆中的非字符串常量池区创建一个字符串对象。一共创建了两个，都在堆中，字符串常量池内、外各有一个。用到的是字符串常量池以外的那个字符串，常量池中的相当于建了个缓存，下次使用的时候会先进常量池中拿。</li>
+<li>如果字符串常量池中存在，直接将内存中的引用返回</li>
+</ul>
+<p><strong>注意：</strong>字符串常量池中创建的”abc”，并不是new String()创建的，而是在代码中写的常量直接创建的。new String()只会在堆中字符串常量池外创建一个对象。</p>
+<h4 id="intern"><a href="#intern" class="headerlink" title="intern();"></a><strong>intern();</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String str1 = <span class="keyword">new</span> String(<span class="string">&quot;abc&quot;</span>);</span><br><span class="line">String str2 = str1.intern();</span><br><span class="line">System.out.println(str1 == str2); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>是一个native方法。调用时，判断常量池中是否存在。</p>
+<ul>
+<li>如果有，返回常量池中的字符串(的引用) – <strong>返回的是 字符串常量池中的字符串的引用</strong></li>
+<li>如果没有，会将此String对象包含的字符串添加到常量池中，并且返回此String对象的引用。– <strong>返回的是 字符串对象的引用(与上面对立，不是字符串常量池的引用)</strong></li>
+</ul>
+<p><img src="http://image.changzhen0212.cn/img/202201182158107.png"></p>
+<h4 id="下面的代码创建了多少个-String-对象-打印结果是什么"><a href="#下面的代码创建了多少个-String-对象-打印结果是什么" class="headerlink" title="下面的代码创建了多少个 String 对象,打印结果是什么"></a>下面的代码创建了多少个 String 对象,打印结果是什么</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;he&quot;</span>) + <span class="keyword">new</span> String(<span class="string">&quot;llo&quot;</span>);</span><br><span class="line">String s2 = s1.intern();</span><br><span class="line">System.out.println(s1 == s2);</span><br></pre></td></tr></table></figure>
+
+<p>先说结果，不考虑GC的情况下</p>
+<ul>
+<li>JDK&gt;=1.7 输出是 true，创建了 5 个对象</li>
+<li>JDK&lt;=1.6 输出 false,创建6个对象</li>
+</ul>
+<p><strong>分析：</strong></p>
+<p>JDK&gt;=1.7时，</p>
+<p><code>String s1 = new String(&quot;he&quot;) + new String(&quot;llo&quot;);</code>这一行代码，会先在字符串常量池中创建两个字面量 “he”,”llo”，还有堆内字符串常量池外创建两个对象”he”,”llo”，还有最后在堆内字符串常量池外创建的对象”hello”，s1是”hello”的引用。这时候创建了5个对象。</p>
+<p><code>String s2 = s1.intern();</code>这行代码，由于字符串常量池中没有”hello”这个字面量，所以会去堆中找”hello”的引用，也就是s1，所以s1==s2为true。</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191134875.png"></p>
+<p>JDK&lt;=1.6时，第一行代码操作是一样的，只不过字符串常量池是在永久代中。</p>
+<p>第二行代码在执行<code>intern()</code>时，如果字符串常量池中没有”hello”，会创建一个”hello”字面量存放在字符串常量池。此时是6个对象。</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191146449.png"></p>
+<h3 id="几个示例"><a href="#几个示例" class="headerlink" title="几个示例"></a>几个示例</h3><p>示例1：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String s0=<span class="string">&quot;abcde&quot;</span>;</span><br><span class="line">String s1=<span class="string">&quot;abcde&quot;</span>;</span><br><span class="line">String s2=<span class="string">&quot;abc&quot;</span> + <span class="string">&quot;de&quot;</span>;</span><br><span class="line">System.out.println( s0==s1 ); <span class="comment">//true</span></span><br><span class="line">System.out.println( s0==s2 ); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<ul>
+<li>第一行代码，字面量”abcde”存入字符串常量池</li>
+<li>第二行代码，直接去字符串常量池中取，所以s0==s1</li>
+<li>第三行代码，一个字符串由多个字符串常量连接而成时，它自己肯定也是字符串常量，所以s2也同样在编译期就被优化为一个字符串常量”abcde”。之后还是从字符串常量池中取。所以s0==s2</li>
+</ul>
+<p>示例2：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;abcde&quot;</span>;</span><br><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;abcde&quot;</span>);</span><br><span class="line">String s2 = <span class="string">&quot;abc&quot;</span> + <span class="keyword">new</span> String(<span class="string">&quot;de&quot;</span>);</span><br><span class="line">System.out.println(s0 == s1);  <span class="comment">// false</span></span><br><span class="line">System.out.println(s0 == s2);  <span class="comment">// false</span></span><br><span class="line">System.out.println(s1 == s2);  <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<ul>
+<li><p>第一行代码，将字面量”abcde”放入字符串常量池，指向s0</p>
+</li>
+<li><p>第二行代码，用new String() 创建的字符串不是常量，不能在编译期就确定。</p>
+<p>创建一个”abcde”的String类型对象到堆里非字符串常量池位置，指向s1</p>
+<p>s0和s1是两个对象，所以不相等</p>
+</li>
+<li><p>第三行代码，将字面量”abc”存入字符串常量池，同样的后半段new String()结果不能在编译期确定，所以new一个String对象”de”，在堆里字符串常量池外，同时也向字符串常量池内存放一份”de”。字面量”abc”和对象”de”相加的结果组成一个新的String对象放在堆内非字符串常量池。所以s0!=s2.</p>
+<p>同时，s1和s2是两个String对象,所以s1!=s2</p>
+</li>
+</ul>
+<p>查看字节码可知，第三行代码<code>String s2 = &quot;abc&quot; + new String(&quot;de&quot;);</code>会被优化成<code>StringBuilder.append(&quot;abc&quot;).apend(&quot;de&quot;)</code></p>
+<p><img src="http://image.changzhen0212.cn/img/202201191436390.png"></p>
+<p>示例3：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">String a1 = <span class="string">&quot;a1&quot;</span>;</span><br><span class="line">String b1 = <span class="string">&quot;a&quot;</span> + <span class="number">1</span>;</span><br><span class="line">System.out.println(a1 == b1); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">String a2 = <span class="string">&quot;atrue&quot;</span>;</span><br><span class="line">String b2 = <span class="string">&quot;a&quot;</span> + <span class="string">&quot;true&quot;</span>;</span><br><span class="line">System.out.println(a2 == b2); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">String a3 = <span class="string">&quot;a3.4&quot;</span>;</span><br><span class="line">String b3 = <span class="string">&quot;a&quot;</span> + <span class="number">3.4</span>;</span><br><span class="line">System.out.println(a3 == b3); <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：JVM对于字符串常量的「+」操作，编译期间会将常量字符串的”+”连接优化为连接后的值。比如<code>&quot;a&quot;+1</code>在编译器优化后生成的class文件中就已经是<code>&quot;a1&quot;</code>了。所以上面的几个结果都为true。</p>
+<p>查看JVM指令码：</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191455699.png"></p>
+<p>示例4：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;ab&quot;</span>;</span><br><span class="line">String s1 = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">String s2 = <span class="string">&quot;a&quot;</span> + s1;</span><br><span class="line">System.out.println(s0 == s2); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<ul>
+<li>第一行代码，字面量”ab”放入字符串常量池，s0指向字面量”ab”，s0是字面量的引用</li>
+<li>第二行代码，字面量”b”放入字符串常量池,s1指向字面量”b”,s1是字面量”b”的引用</li>
+<li>第三行代码，字面量”a”放入字符串常量池，s1是引用，编译期间不能确定。所以最后生成的s2是个String对象放入到堆中非字符串常量池的位置。所以s0!=s2<ul>
+<li>编译期间，会把<code>&quot;a&quot; + s1;</code>优化成<code>StringBuilder.append(&quot;a&quot;).append(s1)</code></li>
+</ul>
+</li>
+</ul>
+<p>示例5：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;ab&quot;</span>;</span><br><span class="line"><span class="keyword">final</span> String s1 = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">String s2 = <span class="string">&quot;a&quot;</span> + s1;</span><br><span class="line">System.out.println(s0 == s2); <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<p>跟上一个示例相比，第二行代码多了个final，结果就会不同。因为final修饰的变量，在编译时被解析为常量值的一个本地拷贝存储到自己的常量池中或嵌入到它的字节码流中。所以<code>&quot;a&quot;+s1</code>和<code>&quot;a&quot;+:&quot;b&quot;</code>效果相同，所以结果为true.</p>
+<p>JVM指令码：</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191532444.png"></p>
+<p>示例6：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    String s0 = <span class="string">&quot;ab&quot;</span>;</span><br><span class="line">    <span class="keyword">final</span> String s1 = getB();</span><br><span class="line">    String s2 = <span class="string">&quot;a&quot;</span> + s1;</span><br><span class="line">    System.out.println(s0 == s2); <span class="comment">// false</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">getB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;b&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<p>与上一个示例相比，s1虽然是final修饰，但是调用的方法。</p>
+<p>只有在程序运行之后，才能调用getB()方法，将”a”和返回值动态链接并分配地址给s2。</p>
+<p>所以s0!=s2</p>
+<p>JVM指令码：</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191546129.png"></p>
+<p>示例7：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;a&quot;</span> + <span class="string">&quot;b&quot;</span> + <span class="string">&quot;c&quot;</span>;  <span class="comment">//就等价于String s = &quot;abc&quot;;</span></span><br><span class="line">String a = <span class="string">&quot;a&quot;</span>;</span><br><span class="line">String b = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">String c = <span class="string">&quot;c&quot;</span>;</span><br><span class="line">String s1 = a + b + c;</span><br><span class="line">System.out.println(s0 == s1); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<p><code>String s1 = a + b + c;</code>会被优化成<code>StringBuilder.append(a).append(b).append(c).toString()</code>，然后作为一个新的字符串对象保存在堆中非字符串常量池位置。所以s0!=s1</p>
+<p>JVM指令码：</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191552252.png"></p>
+<p>示例8：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;test&quot;</span>);</span><br><span class="line">System.out.println(s1 == s1.intern());   <span class="comment">//false</span></span><br><span class="line"></span><br><span class="line">String s2 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;abc&quot;</span>).toString();</span><br><span class="line">System.out.println(s2 == s2.intern());  <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<ul>
+<li>编译期间，字面量”test”存入字符串常量池。</li>
+<li>在堆中非字符串常量池中，new 一个”test”的String对象，s1是这个对象的引用。</li>
+<li><code>s1.intern();</code>会先去字符串常量池中找，如果找到就返回。所以s1!=s1.intern()</li>
+<li>下面的new StringBuilder()同理</li>
+</ul>
+<p><img src="http://image.changzhen0212.cn/img/202201191637086.png"></p>
+<p>JVM指令码：</p>
+<p><img src="http://image.changzhen0212.cn/img/202201191626195.png"></p>
+<p>示例9：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String str1 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;计算机&quot;</span>).append(<span class="string">&quot;技术&quot;</span>).toString();</span><br><span class="line">System.out.println(str1 == str1.intern());  <span class="comment">//true</span></span><br><span class="line"></span><br><span class="line">String str2 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;ja&quot;</span>).append(<span class="string">&quot;va&quot;</span>).toString();</span><br><span class="line">System.out.println(str2 == str2.intern());  <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<ul>
+<li>第一行代码，字面量”计算机”和”技术”存入字符串常量池，新的字符串”计算机技术”在堆内非字符串常量池中，str1指向这个对象，是”计算机技术”这个对象的引用</li>
+<li>str1.intern()，因为在字符串常量池中不存在”计算机技术”这个字面量，所以会复制一份这个字面量，然后返回str1的引用，所以str1==str1.intern()</li>
+<li>下面换成java为什么就不行了呢。因为intern会先去找字符串常量池中是否存在，「java」这个关键字在编译期间肯定已经存入过字符串常量池了，所以str2.intern()返回的是字符串常量池中的引用，所以str2!=str2.intern()</li>
+</ul>
+<h2 id="八种基础类型的包装类常量池"><a href="#八种基础类型的包装类常量池" class="headerlink" title="八种基础类型的包装类常量池"></a>八种基础类型的包装类常量池</h2><p>Java中基本类型的包装类的大部分都实现了常量池技术(严格来说应该叫对象池，在堆上)，这些类是Byte,Short,Integer,Long,Character,Boolean,另外两种浮点数类型的包装类则没有实现。</p>
+<p>另外Byte,Short,Integer,Long,Character这5种整型的包装类也只是在对应值小于等于127时才可使用对象池，也即对象不负责创建和管理大于127的这些类的对象。因为一般这种比较小的数用到的概率相对较大。</p>
+<p>Integer在初始化时候，会创建[-128,127]的缓存池。如果定义Integer值在范围内，会进缓存池拿。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 5种整形的包装类Byte,Short,Integer,Long,Character的对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 在值小于127时可以使用对象池</span></span><br><span class="line">Integer i1 = <span class="number">127</span>;  <span class="comment">// 这种调用底层实际是执行的Integer.valueOf(127)，里面用到了IntegerCache对象池</span></span><br><span class="line">Integer i2 = <span class="number">127</span>;</span><br><span class="line">System.out.println(i1 == i2);<span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 值大于127时，不会从对象池中取对象</span></span><br><span class="line">Integer i3 = <span class="number">128</span>;</span><br><span class="line">Integer i4 = <span class="number">128</span>;</span><br><span class="line">System.out.println(i3 == i4);<span class="comment">// false</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 用new关键词新生成对象不会使用对象池</span></span><br><span class="line">Integer i5 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">Integer i6 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">System.out.println(i5 == i6);<span class="comment">// false</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Boolean类也实现了对象池技术</span></span><br><span class="line">Boolean bool1 = <span class="keyword">true</span>;</span><br><span class="line">Boolean bool2 = <span class="keyword">true</span>;</span><br><span class="line">System.out.println(bool1 == bool2); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 用new关键词新生成对象不会使用对象池</span></span><br><span class="line">Boolean bool3 = <span class="keyword">new</span> Boolean(<span class="keyword">true</span>);</span><br><span class="line">Boolean bool4 = <span class="keyword">new</span> Boolean(<span class="keyword">true</span>);</span><br><span class="line">System.out.println(bool3 == bool4); <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//浮点类型的包装类没有实现对象池技术</span></span><br><span class="line">Float f1 = <span class="number">1F</span>;</span><br><span class="line">Float f2 = <span class="number">1F</span>;</span><br><span class="line">System.out.println(f1 == f2); <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line">Double d1 = <span class="number">1.0</span>;</span><br><span class="line">Double d2 = <span class="number">1.0</span>;</span><br><span class="line">System.out.println(d1 == d2); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>查看以下代码的JVM指令码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在值小于127时可以使用对象池</span></span><br><span class="line">Integer i1 = <span class="number">127</span>;  <span class="comment">// 这种调用底层实际是执行的Integer.valueOf(127)，里面用到了IntegerCache对象池</span></span><br><span class="line">Integer i2 = <span class="number">127</span>;</span><br><span class="line">System.out.println(i1 == i2);<span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 用new关键词新生成对象不会使用对象池</span></span><br><span class="line">Integer i5 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">Integer i6 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">System.out.println(i5 == i6);<span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>查看JVM指令码可知，<code>Integer i1 = 127;</code>赋值使用的是Integer.valueOf()，new的方式调用了<code>&lt;init&gt;</code></p>
+<p><img src="http://image.changzhen0212.cn/img/202201192209581.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/18/JVM/JVM-08-JVM%E8%B0%83%E4%BC%98/" rel="prev" title="JVM调优">
+      <i class="fa fa-chevron-left"></i> JVM调优
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F%E6%B1%A0%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">常量池：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%B8%B8%E9%87%8F%E6%B1%A0%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">2.</span> <span class="nav-text">静态常量池和运行时常量池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">3.</span> <span class="nav-text">字符串常量池</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%93%8D%E4%BD%9C"><span class="nav-number">3.1.</span> <span class="nav-text">三种字符串操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%B5%8B%E5%80%BC-%E5%8F%AA%E4%BC%9A%E5%9C%A8%E5%B8%B8%E9%87%8F%E6%B1%A0%E4%B8%AD%E3%80%82"><span class="nav-number">3.1.1.</span> <span class="nav-text">直接赋值,只会在常量池中。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#new-String"><span class="nav-number">3.1.2.</span> <span class="nav-text">new String();</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#intern"><span class="nav-number">3.1.3.</span> <span class="nav-text">intern();</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E9%9D%A2%E7%9A%84%E4%BB%A3%E7%A0%81%E5%88%9B%E5%BB%BA%E4%BA%86%E5%A4%9A%E5%B0%91%E4%B8%AA-String-%E5%AF%B9%E8%B1%A1-%E6%89%93%E5%8D%B0%E7%BB%93%E6%9E%9C%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">3.1.4.</span> <span class="nav-text">下面的代码创建了多少个 String 对象,打印结果是什么</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%A0%E4%B8%AA%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.2.</span> <span class="nav-text">几个示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E7%A7%8D%E5%9F%BA%E7%A1%80%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%8C%85%E8%A3%85%E7%B1%BB%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">4.</span> <span class="nav-text">八种基础类型的包装类常量池</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ChangZhen"
+      src="/images/head_icon.jpg">
+  <p class="site-author-name" itemprop="name">ChangZhen</p>
+  <div class="site-description" itemprop="description">不忘初心，方得始终</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ChangZhen</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

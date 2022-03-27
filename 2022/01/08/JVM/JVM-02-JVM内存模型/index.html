@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"changzhen0212.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="JVM内存分布JVM虚拟机主要分三大块：类装载子系统、运行时数据区、字节码执行引擎  类装载子系统：把类的数据从class文件加载到内存，并对数据进行验证、解析和初始化，最终形成可以被虚拟机直接使用的Java类型的过程。 运行时数据区：JVM的内存模型，最最核心。 字节码执行引擎：虚拟机方法调用和字节码执行。解析命令，提交给操作系统执行。  三者之间的关系： 一个字节码文件，通过类装载子系统，丢到">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM内存模型">
+<meta property="og:url" content="http://changzhen0212.github.io/2022/01/08/JVM/JVM-02-JVM%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="ChangZhen&#39;s Blog">
+<meta property="og:description" content="JVM内存分布JVM虚拟机主要分三大块：类装载子系统、运行时数据区、字节码执行引擎  类装载子系统：把类的数据从class文件加载到内存，并对数据进行验证、解析和初始化，最终形成可以被虚拟机直接使用的Java类型的过程。 运行时数据区：JVM的内存模型，最最核心。 字节码执行引擎：虚拟机方法调用和字节码执行。解析命令，提交给操作系统执行。  三者之间的关系： 一个字节码文件，通过类装载子系统，丢到">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201072027762.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201081553374.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201081542827.png">
+<meta property="article:published_time" content="2022-01-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-27T15:11:15.331Z">
+<meta property="article:author" content="ChangZhen">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.changzhen0212.cn/img/202201072027762.png">
+
+<link rel="canonical" href="http://changzhen0212.github.io/2022/01/08/JVM/JVM-02-JVM%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM内存模型 | ChangZhen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ChangZhen's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://changzhen0212.github.io/2022/01/08/JVM/JVM-02-JVM%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head_icon.jpg">
+      <meta itemprop="name" content="ChangZhen">
+      <meta itemprop="description" content="不忘初心，方得始终">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ChangZhen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM内存模型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-08 00:00:00" itemprop="dateCreated datePublished" datetime="2022-01-08T00:00:00+08:00">2022-01-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-27 23:11:15" itemprop="dateModified" datetime="2022-03-27T23:11:15+08:00">2022-03-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/" itemprop="url" rel="index"><span itemprop="name">Java技术栈</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="JVM内存分布"><a href="#JVM内存分布" class="headerlink" title="JVM内存分布"></a>JVM内存分布</h2><p>JVM虚拟机主要分三大块：类装载子系统、运行时数据区、字节码执行引擎</p>
+<ul>
+<li>类装载子系统：把类的数据从class文件加载到内存，并对数据进行验证、解析和初始化，最终形成可以被虚拟机直接使用的Java类型的过程。</li>
+<li>运行时数据区：JVM的内存模型，最最核心。</li>
+<li>字节码执行引擎：虚拟机方法调用和字节码执行。解析命令，提交给操作系统执行。</li>
+</ul>
+<p>三者之间的关系：</p>
+<p>一个字节码文件，通过类装载子系统，丢到运行时数据区，最后通过字节码执行引擎来执行内存区中的代码。</p>
+<h2 id="运行时数据区"><a href="#运行时数据区" class="headerlink" title="运行时数据区"></a>运行时数据区</h2><p>JVM运行时数据区主要分为：堆、栈、方法区(元空间)、本地方法栈、程序计数器。</p>
+<p>其中，堆、方法区是所有线程共享。栈、本地方法栈、程序计数器是每个线程独有的。</p>
+<p><img src="http://image.changzhen0212.cn/img/202201072027762.png" alt=" "></p>
+<h2 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h2><p>官方叫做<strong>虚拟机栈</strong>，线程私有，生命周期与线程相同，所以也可以叫做线程栈。栈描述的是Java方法执行的线程内存模型。</p>
+<h3 id="栈帧"><a href="#栈帧" class="headerlink" title="栈帧"></a>栈帧</h3><p>虚拟机进行方法调用和方法执行背后的数据结构，存放局部变量表、操作数栈、动态连接、方法出口等信息。</p>
+<p>一句话总结：<strong>一个方法，对应着一块栈帧</strong></p>
+<p>一个类的方法，只要开始运行它，就有一个主线程运行方法，只要有一个线程运行main方法，java虚拟机会在线程栈的一大块内存空间，给当前线程分配一小块独立的内存空间，用来存放当前线程中需要用到的局部变量的内存空间，这个线程栈只能存放自己线程内部的局部变量。</p>
+<p>假设又来了一个线程，java虚拟机会在线程栈的一大块内存空间，再分配一小块独立内存空间给这个线程，存放线程的局部变量。</p>
+<p>所以不同线程之间的局部变量是互不影响的，每个线程都有自己的内存空间存放自己的局部变量。</p>
+<h3 id="虚拟机栈和数据结构的栈有什么区别"><a href="#虚拟机栈和数据结构的栈有什么区别" class="headerlink" title="虚拟机栈和数据结构的栈有什么区别"></a>虚拟机栈和数据结构的栈有什么区别</h3><ul>
+<li><p>数据结构的栈：后进先出(Last In First Out，LIFO)。</p>
+</li>
+<li><p>虚拟机栈：存放栈帧，结构就是数据结构的栈，后进先出。每次都从栈顶取，符合java代码的执行流程，后调用的方法先释放掉(出栈)</p>
+</li>
+</ul>
+<p>如果方法重复调用，是在栈内存中不断地往上分配栈帧，而不是套娃</p>
+<h3 id="栈帧的结构："><a href="#栈帧的结构：" class="headerlink" title="栈帧的结构："></a>栈帧的结构：</h3><ul>
+<li>局部变量表：存放方法参数和方法内部定义的局部变量。编译期确定最大容量,Code#max_locals<ul>
+<li>第0位存放的是<code>this</code></li>
+</ul>
+</li>
+<li>操作数栈：内部也是栈结构，后进先出，存放的是具体的操作数，是变量对应的值。编译期确定最大深度，Code#max_stacks</li>
+<li>动态连接：每个栈帧都包含一个指向常量池中该栈帧所属方法的引用。字节码中的方法调用指令就以常量池里指向方法的符号引用作为参数。这些符号引用在每一次运行期间都转化为直接引用，就是动态连接。<ul>
+<li>与之相对应的是静态连接，在类加载阶段或者第一次调用时就被转化为直接引用</li>
+</ul>
+</li>
+<li>方法出口：根据方法出口里保存的信息，可以知道返回到main()方法里面，继续从哪一行代码进行</li>
+</ul>
+<p>通常new一个对象是放到堆里面（也可能通过逃逸分析在栈中分配，暂不考虑。）;<code>new Math();</code></p>
+<p>现在Math math 局部变量表中有一个math。</p>
+<p>此时堆里的math和局部变量表里的math的关系，局部变量表里的math是一块空的内存空间，并不是真正的math，存放的是堆中的math的内存地址，就是指针。</p>
+<p><img src="http://image.changzhen0212.cn/img/202201081553374.png"></p>
+<h3 id="栈的内存分配"><a href="#栈的内存分配" class="headerlink" title="栈的内存分配"></a>栈的内存分配</h3><p>是给一个线程分配的,512K或者1M就可以, <code>-Xss</code>设置的越小，count值就越小，说明一个线程栈可以分配的栈帧就越少，但是对于JVM整体来说，能开启的线程数会更多。</p>
+<h2 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h2><p>同样是每一个线程独有的，每个线程都有的一块内存空间，用于记录即将执行的代码的内存地址，或者叫做行号。</p>
+<p>每执行完一行代码，<strong>字节码执行引擎</strong>会马上动态地修改程序计数器的值。</p>
+<h2 id="方法区"><a href="#方法区" class="headerlink" title="方法区"></a>方法区</h2><p>各个线程共享的内存区域</p>
+<p>JDK8之前叫做永久代，之后叫做元空间。</p>
+<p>存储已被虚拟机加载的 类型信息、常量、静态变量、类元信息等。</p>
+<h3 id="运行时常量池"><a href="#运行时常量池" class="headerlink" title="运行时常量池"></a>运行时常量池</h3><p><code>javap -v</code> 生成的汇编指令可以看到常量池，常量池是放到方法区里的，叫做<strong>运行时常量池</strong>，常量池有很多，还有八大类型的，字符串常量池。</p>
+<p>符号在程序真正开始运行时，会加载到内存中，这些静态的常量池加载到内存中会变成运行时常量池。</p>
+<h3 id="类元信息"><a href="#类元信息" class="headerlink" title="类元信息"></a>类元信息</h3><p>编译器编译后的代码信息，就是类的信息</p>
+<h3 id="元空间的内存分配"><a href="#元空间的内存分配" class="headerlink" title="元空间的内存分配"></a>元空间的内存分配</h3><p>元空间使用的是直接内存，也就是物理内存。如果不设置，默认可以把剩余的物理内存全部用完，默认初始值是21M。元空间满了会触发Full GC，会回收掉方法区一些无用的对象。</p>
+<p>方法区有一个容量分配大小的自动扩容机制</p>
+<p>如果达到了21M触发了full gc</p>
+<ul>
+<li>回收后元空间变为1m，这个21M会被调小，可能到15M</li>
+<li>回收后元空间几乎没有变化，这个21M会被调大，可能会变30M或者40M</li>
+</ul>
+<p>设置元空间大小，可以加快war包部署，一般推荐初始和最大值都设置256M</p>
+<p><strong>可以认为线程栈和方法区都是使用操作系统的直接内存，非堆内存。</strong></p>
+<h2 id="本地方法栈"><a href="#本地方法栈" class="headerlink" title="本地方法栈"></a>本地方法栈</h2><p>线程私有，每一个线程都有自己的本地方法栈</p>
+<p>存放的是本地方法 native修饰的，底层是C或者C++实现的。</p>
+<h2 id="堆"><a href="#堆" class="headerlink" title="堆"></a>堆</h2><p>所有线程共享的内存区域，唯一目的就是存放对象实例。</p>
+<h3 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h3><p>两个分代假说：</p>
+<ol>
+<li>弱分代假说（Weak Generational Hypothesis）：绝大多数对象都是朝生夕灭的。</li>
+<li>强分代假说（Strong Generational Hypothesis）：熬过越多次垃圾收集过程的对象就越难以消亡。</li>
+</ol>
+<p>基于以上两种分代假说，将堆内存分为新生代、老年代。新生代中又分为Eden区、Survivor区，Survivor区又分为From Survivor区、To survivor区</p>
+<p><img src="http://image.changzhen0212.cn/img/202201081542827.png"></p>
+<p>默认情况下分配比例，比例都是可配置的</p>
+<ul>
+<li>年轻代和老年代的比例为1:2，新生代为1/3，老年代为2/3</li>
+<li>新生代中，Eden:S0:S1 = 8:1:1</li>
+</ul>
+<h2 id="GC整体过程"><a href="#GC整体过程" class="headerlink" title="GC整体过程"></a>GC整体过程</h2><p>大多数对象都是朝生夕灭的，一个对象new出来之后，通常是放到Eden区的（也不一定全是，比如大对象后面讨论）。</p>
+<p>Eden区满了会触发minor gc，通过可达性分析标记出非垃圾对象，这些非垃圾对象赋值到S0区，剩下的全部干掉。经过这一轮GC之后，对象的分代年龄会+1。</p>
+<p>程序继续运行，Eden区又满了，又触发minor gc，此时GC回收Eden区和S0区，将Eden区中存活的对象和S0区存活的对象都复制到S1区，所有对象分代年龄+1，Eden区和S0区对象干掉。</p>
+<p>程序继续运行，Eden区又满了，触发GC，回收的是Eden区和Survivor区中的非空区域，存活下来的对象挪到Survivor区的空区域，分代年龄+1。</p>
+<p>新生代中存活的对象会在S0和S1区挪来挪去，当分代年龄达到15（不同垃圾收集器的值设置不同，最大是15，对象头中用4位保存对象头，最大是15）时还没释放掉，对象会被挪到老年代。</p>
+<h3 id="哪些对象会挪到老年代"><a href="#哪些对象会挪到老年代" class="headerlink" title="哪些对象会挪到老年代"></a>哪些对象会挪到老年代</h3><p>静态变量的对象、对象池、缓存、缓存对象、Spring容器中的对象，From Survivor区放不下的对象等…</p>
+<p>如果老年代满了，就会触发Full GC，此时回收的是整个堆的对象。如果老年代还是满的，之后再放就会触发(out of memory OOM)</p>
+<p>GC时会触发(Stop The World, STW)，不管是Minor GC还是 Full GC都会触发，会停止所有的用户线程。</p>
+<p>JVM调优主要是为了减少GC，更多的是减少Full GC，Full GC的垃圾收集时间比较长，STW的时间也会比较长。</p>
+<h3 id="JVM为什么要设计STW"><a href="#JVM为什么要设计STW" class="headerlink" title="JVM为什么要设计STW"></a>JVM为什么要设计STW</h3><p><strong>能不能不停止用户线程，让用户继续操作比如下单、加购物车</strong></p>
+<p>GC的过程主要是收集一些非垃圾对象，如果不停止用户线程，用户线程执行完了还没完成垃圾收集，之前标记的非垃圾对象，现在已经变成垃圾对象了。可能几十万的对象标记都白做了。</p>
+<h3 id="不同的垃圾回收名词"><a href="#不同的垃圾回收名词" class="headerlink" title="不同的垃圾回收名词"></a>不同的垃圾回收名词</h3><p>垃圾收集主要分为 部分收集(Partial GC)和整堆收集(Full GC)。部分收集又分出新生代收集、老年代收集、混合收集</p>
+<ul>
+<li>部分收集(Partial GC)<ul>
+<li>新生代收集(Minor GC/Young GC)：新生代的垃圾收集</li>
+<li>老年代收集(Major GC/Old GC)：目前Major GC说法有些混淆，有时候单指老年代收集有时候又指的是整堆收集Full GC</li>
+<li>混合收集(Mixed GC)：收集整个新生代以及部分老年代的垃圾收集，只有G1收集器有这种行为</li>
+</ul>
+</li>
+<li>整堆收集(Full GC):收集整个Java堆和方法区</li>
+</ul>
+<h2 id="从内存分配的角度看类加载"><a href="#从内存分配的角度看类加载" class="headerlink" title="从内存分配的角度看类加载"></a>从内存分配的角度看类加载</h2><p>类加载器，也是放在堆中的，因为类加载器就是一个对象。对象就要放在堆里。</p>
+<p>类加载到内存中</p>
+<ul>
+<li>class对象放在堆中</li>
+<li>类型信息(类元信息)放在元空间中，是C的对象。</li>
+<li>堆中对象的的对象头中存有指针，指向元空间C底层的对象，元空间中的这个对象，对class对象有一个引用</li>
+</ul>
+<h2 id="JVM内存参数设置"><a href="#JVM内存参数设置" class="headerlink" title="JVM内存参数设置"></a>JVM内存参数设置</h2><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 堆：</span></span><br><span class="line"><span class="attr">-Xms</span></span><br><span class="line"><span class="attr">-Xmx</span></span><br><span class="line"><span class="comment"># 新生代（年轻代）</span></span><br><span class="line"><span class="attr">-Xmn</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">#方法区</span></span><br><span class="line"><span class="meta">-XX</span>:<span class="string">MetaspaceSize # 元空间初始值</span></span><br><span class="line"><span class="meta">-XX</span>:<span class="string">MaxMetaspaceSize #元空间最大值</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># 栈</span></span><br><span class="line"><span class="attr">-Xss</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/JVM/JVM-01-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B/" rel="prev" title="类加载过程">
+      <i class="fa fa-chevron-left"></i> 类加载过程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/09/JVM/JVM-03-JVM%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E4%B8%8E%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/" rel="next" title="JVM对象创建与内存分配">
+      JVM对象创建与内存分配 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM%E5%86%85%E5%AD%98%E5%88%86%E5%B8%83"><span class="nav-number">1.</span> <span class="nav-text">JVM内存分布</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA"><span class="nav-number">2.</span> <span class="nav-text">运行时数据区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%88"><span class="nav-number">3.</span> <span class="nav-text">栈</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%88%E5%B8%A7"><span class="nav-number">3.1.</span> <span class="nav-text">栈帧</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E5%92%8C%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%9A%84%E6%A0%88%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟机栈和数据结构的栈有什么区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%88%E5%B8%A7%E7%9A%84%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="nav-number">3.3.</span> <span class="nav-text">栈帧的结构：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%88%E7%9A%84%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="nav-number">3.4.</span> <span class="nav-text">栈的内存分配</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">程序计数器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E5%8C%BA"><span class="nav-number">5.</span> <span class="nav-text">方法区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">5.1.</span> <span class="nav-text">运行时常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E5%85%83%E4%BF%A1%E6%81%AF"><span class="nav-number">5.2.</span> <span class="nav-text">类元信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%83%E7%A9%BA%E9%97%B4%E7%9A%84%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="nav-number">5.3.</span> <span class="nav-text">元空间的内存分配</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88"><span class="nav-number">6.</span> <span class="nav-text">本地方法栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86"><span class="nav-number">7.</span> <span class="nav-text">堆</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86"><span class="nav-number">7.1.</span> <span class="nav-text">分代收集</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GC%E6%95%B4%E4%BD%93%E8%BF%87%E7%A8%8B"><span class="nav-number">8.</span> <span class="nav-text">GC整体过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%AA%E4%BA%9B%E5%AF%B9%E8%B1%A1%E4%BC%9A%E6%8C%AA%E5%88%B0%E8%80%81%E5%B9%B4%E4%BB%A3"><span class="nav-number">8.1.</span> <span class="nav-text">哪些对象会挪到老年代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JVM%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E8%AE%A1STW"><span class="nav-number">8.2.</span> <span class="nav-text">JVM为什么要设计STW</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%90%8D%E8%AF%8D"><span class="nav-number">8.3.</span> <span class="nav-text">不同的垃圾回收名词</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%9A%84%E8%A7%92%E5%BA%A6%E7%9C%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD"><span class="nav-number">9.</span> <span class="nav-text">从内存分配的角度看类加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM%E5%86%85%E5%AD%98%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="nav-number">10.</span> <span class="nav-text">JVM内存参数设置</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ChangZhen"
+      src="/images/head_icon.jpg">
+  <p class="site-author-name" itemprop="name">ChangZhen</p>
+  <div class="site-description" itemprop="description">不忘初心，方得始终</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ChangZhen</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

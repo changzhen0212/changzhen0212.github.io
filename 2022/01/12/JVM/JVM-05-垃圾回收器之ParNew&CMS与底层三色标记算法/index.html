@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"changzhen0212.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="垃圾收集算法分代收集理论当前商业虚拟机的垃圾收集器，大多数都遵循了“分代收集”（Generational Collection）的理论进行设计，是一套符合大多数程序运行实际情况的经验法则，它建立在两个分代假说之上:    弱分代假说（Weak Generational Hypothesis）：绝大多数对象都是朝生夕灭的。    强分代假说（Strong Generational Hypothesi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="垃圾回收器之ParNew&amp;CMS与底层三色标记算法">
+<meta property="og:url" content="http://changzhen0212.github.io/2022/01/12/JVM/JVM-05-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B9%8BParNew&CMS%E4%B8%8E%E5%BA%95%E5%B1%82%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="ChangZhen&#39;s Blog">
+<meta property="og:description" content="垃圾收集算法分代收集理论当前商业虚拟机的垃圾收集器，大多数都遵循了“分代收集”（Generational Collection）的理论进行设计，是一套符合大多数程序运行实际情况的经验法则，它建立在两个分代假说之上:    弱分代假说（Weak Generational Hypothesis）：绝大多数对象都是朝生夕灭的。    强分代假说（Strong Generational Hypothesi">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201140657660.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201140703183.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201140705392.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201140930589.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201141030642.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201141039037.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201141035758.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201141046413.png">
+<meta property="og:image" content="http://image.changzhen0212.cn/img/202201141344491.png">
+<meta property="article:published_time" content="2022-01-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-27T15:14:19.235Z">
+<meta property="article:author" content="ChangZhen">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.changzhen0212.cn/img/202201140657660.png">
+
+<link rel="canonical" href="http://changzhen0212.github.io/2022/01/12/JVM/JVM-05-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B9%8BParNew&CMS%E4%B8%8E%E5%BA%95%E5%B1%82%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%E7%AE%97%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>垃圾回收器之ParNew&CMS与底层三色标记算法 | ChangZhen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ChangZhen's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://changzhen0212.github.io/2022/01/12/JVM/JVM-05-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B9%8BParNew&CMS%E4%B8%8E%E5%BA%95%E5%B1%82%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head_icon.jpg">
+      <meta itemprop="name" content="ChangZhen">
+      <meta itemprop="description" content="不忘初心，方得始终">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ChangZhen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          垃圾回收器之ParNew&CMS与底层三色标记算法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-12 00:00:00" itemprop="dateCreated datePublished" datetime="2022-01-12T00:00:00+08:00">2022-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-27 23:14:19" itemprop="dateModified" datetime="2022-03-27T23:14:19+08:00">2022-03-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/" itemprop="url" rel="index"><span itemprop="name">Java技术栈</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h2><h3 id="分代收集理论"><a href="#分代收集理论" class="headerlink" title="分代收集理论"></a>分代收集理论</h3><p>当前商业虚拟机的垃圾收集器，大多数都遵循了“分代收集”（Generational Collection）的理论进行设计，是一套符合大多数程序运行实际情况的经验法则，它建立在<br>两个分代假说之上:</p>
+<ul>
+<li><p>  弱分代假说（Weak Generational Hypothesis）：绝大多数对象都是朝生夕灭的。</p>
+</li>
+<li><p>  强分代假说（Strong Generational Hypothesis）：熬过越多次垃圾收集过程的对象就越难以消亡。</p>
+</li>
+</ul>
+<p>两个分代假说共同奠定了垃圾收集器的设计原则：收集器应该将Java堆划分出不同的区域，然后将回收对象依据其年龄（年龄即对象熬过垃圾收集过程的次数）分配到不同的区域之中存储。</p>
+<ul>
+<li><p>  大多数对象都是朝生夕灭，难以熬过垃圾收集过程，把它们集中放在一起，每次回收时只关注如何保留少量存活，而不是去标记那些大量将要被回收的对象</p>
+</li>
+<li><p>  剩下的难以消亡的对象集中放在一块，虚拟机便可以使用较低的频率来回收这个区域</p>
+</li>
+</ul>
+<p>新生代中的对象有可能被老年代引用，为了找出该区域中的存活对象，不得不在固定的GC Roots之外，再额外遍历整个老年代中所有对象来确保可达性分析结果的正确性。这样会给内存回收带来很大的性能负担。</p>
+<p>由此引出第三条经验法则：</p>
+<ul>
+<li>  跨代引用假说（Intergenerational ReferenceHypothesis）：跨代引用相对于同代引用来说仅占极少数</li>
+</ul>
+<p>在此基础上，在新生代上建立一个全局的数据结构（该结构被称为“记忆集”，Remembered Set），这个结构把老年代划分成若干小块，标识出老年代的哪一块内存会存在跨代引用。</p>
+<h3 id="标记复制算法"><a href="#标记复制算法" class="headerlink" title="标记复制算法"></a>标记复制算法</h3><p>新生代使用，老年代没有用。</p>
+<p>新生代内存对半分，整理前，左边随机存放对象，右边空着。整理后，把存活的对象复制到右边，左边全部清空</p>
+<ul>
+<li><p>  优点：实现简单，运行高效</p>
+</li>
+<li><p>  缺点：将可用内存缩小为了原来的一半，浪费空间</p>
+</li>
+</ul>
+<p><img src="http://image.changzhen0212.cn/img/202201140657660.png"></p>
+<h3 id="标记清除算法"><a href="#标记清除算法" class="headerlink" title="标记清除算法"></a>标记清除算法</h3><p>分为<strong>标记阶段</strong>和<strong>清除阶段</strong>。标记存活的对象，统一回收未被标记的对象（一般是这种）。也可以反过来标记出所有需要回收的对象，标记完成后统一回收所有被标记的对象。</p>
+<ul>
+<li><p>缺点：</p>
+<ol>
+<li><p> 效率问题：如果需要标记太多，效率不高</p>
+</li>
+<li><p> 空间问题：标记清除后产生大量不连续的内存碎片</p>
+</li>
+</ol>
+</li>
+</ul>
+<p><img src="http://image.changzhen0212.cn/img/202201140703183.png"></p>
+<h3 id="标记整理算法"><a href="#标记整理算法" class="headerlink" title="标记整理算法"></a>标记整理算法</h3><p>标记过程与标记-清除算法一样，但是后续步骤不是直接对可回收对象回收，而是让所有存活的对象向一端移动，然后直接清理掉边界以外的内存</p>
+<p><img src="http://image.changzhen0212.cn/img/202201140705392.png"></p>
+<h2 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h2><p>如果说收集算法是内存回收的方法论，那垃圾收集器就是内存回收的实践者</p>
+<p><img src="http://image.changzhen0212.cn/img/202201140930589.png"></p>
+<p>为什么有这么多垃圾收集器，因为他们都不够完美。从最早的Serial串行，到Parallel并行，再到CMS是一个不断完善的过程。到目前为止也没有一个完美的垃圾收集器</p>
+<h3 id="垃圾收集器的并发和并行"><a href="#垃圾收集器的并发和并行" class="headerlink" title="垃圾收集器的并发和并行"></a>垃圾收集器的并发和并行</h3><p>联系垃圾收集器的上下文语境</p>
+<ul>
+<li>并行（Parallel）：并行描述的是<strong>多条垃圾收集器线程之间的关系</strong>，说明同一时间有多条这样的线程在协同工作，通常默认此时用户线程是处于等待状态。</li>
+<li>并发（Concurrent）：并发描述的是<strong>垃圾收集器线程与用户线程之间的关系</strong>，说明同一时间垃圾收集器线程与用户线程都在运行。由于用户线程并未被冻结，所以程序仍然能响应服务请求，但由于垃圾收集器线程占用了一部分系统资源，此时应用程序的处理的吞吐量将受到一定影响。</li>
+</ul>
+<h3 id="Serial收集器"><a href="#Serial收集器" class="headerlink" title="Serial收集器"></a>Serial收集器</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseSerialGC <span class="comment">// 新生代</span></span><br><span class="line">-XX:+UseSerialOldGC <span class="comment">// 老年代</span></span><br></pre></td></tr></table></figure>
+
+<p>是最基本、历史最悠久的垃圾收集器。是<strong>单线程</strong>的，只会用一条垃圾收集线程去完成垃圾收集工作，在进行垃圾收集工作时候必须暂停其他工作线程，STW stop the world，直到收集结束</p>
+<p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
+<p><img src="http://image.changzhen0212.cn/img/202201141030642.png"></p>
+<h3 id="Parallel-Scavenge收集器"><a href="#Parallel-Scavenge收集器" class="headerlink" title="Parallel Scavenge收集器"></a>Parallel Scavenge收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseParallelGC // 新生代</span><br><span class="line">-XX:+UseParallelOldGC // 老年代</span><br></pre></td></tr></table></figure>
+
+<p>就是Serial的<strong>多线程</strong>版本, 默认收集线程数跟cpu核数相同，通过<code>-XX:ParallelGCThreads</code> 指定收集线程数，通常不推荐修改。</p>
+<p><strong>对比Parallel和CMS</strong></p>
+<ul>
+<li><p>Parallel收集器关注点是吞吐量（高效利用CPU），STW的时间会比较长。</p>
+</li>
+<li><p>CMS关注点更多是用户线程停顿时间，STW时间比较短，提高用户体验</p>
+</li>
+</ul>
+<p><strong>吞吐量：cpu中用于运行用户代码的时间与cpu总消耗时间的比值</strong></p>
+<p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
+<p><img src="http://image.changzhen0212.cn/img/202201141039037.png"></p>
+<p>CMS是老年代的收集器，无法与CMS配合使用，因此有了ParNew</p>
+<h3 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-XX:UseParNewGC</span><br></pre></td></tr></table></figure>
+
+
+
+<p>跟Parallel很类似，区别主要是它可以和CMS收集器配合使用。</p>
+<p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
+<p><img src="http://image.changzhen0212.cn/img/202201141035758.png"></p>
+<h3 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseConcMarkSweepGC // 老年代</span><br></pre></td></tr></table></figure>
+
+<p><strong>使用标记-清除算法</strong></p>
+<p>整个垃圾回收过程主要是5步：</p>
+<ol>
+<li><p>初始标记：会做STW，用可达性分析算法，从GC Roots出发，标记所有能<strong>直接引用的对象（只找直接引用的，间接引用的不找），速度很快。</strong></p>
+<p><strong>为什么要STW？</strong>：如果不STW，不断地有新的局部变量引用新的对象，初始标记就永远做不完了</p>
+</li>
+<li><p>并发标记：不需要STW，并发标记阶段就是上一步从GC Roots的直接关联对象出发，一直找，遍历整个对象图。<strong>这个过程耗时较长，整个GC过程中时间最长，大概占整个GC时间的80%<strong>，但是不需要停顿用户线程，用户线程可以跟垃圾收集线程一起并发运行。因为用户程序继续运行，可能会有导致</strong>已经标记过的对象状态发生改变</strong>。</p>
+<p>可能之前不是垃圾，等并发标记结束时候，就变成垃圾了；也有可能之前是垃圾对象，等并发标记结束之后又被引用了，变成非垃圾。</p>
+</li>
+<li><p>重新标记：会STW，修复并发标记时候状态改变的对象，停顿时间比初始标记阶段稍长，远远比并发标记阶段时间短，主要是用<strong>三色标记算法</strong> </p>
+</li>
+<li><p>并发清理：不需要STW，用户线程和垃圾收集线程并行把标记的对象保留，没有标记的对象清除掉。这个阶段如果有新增对象，会标记为黑色，不做任何处理（<strong>三色标记算法</strong>） </p>
+</li>
+<li><p>并发重置：重置本次GC过程的标记数据。下次会重新标记。</p>
+</li>
+</ol>
+<p><img src="http://image.changzhen0212.cn/img/202201141046413.png"></p>
+<p><strong>CMS对比Parallel</strong></p>
+<p>整个垃圾收集的过程CMS&gt;Parallel，但是CMS的stop the world时间要远远小于Parallel，用户体验很好。</p>
+<p>Parallel更在乎吞吐量，CMS牺牲了整个垃圾收集过程的时间，换来STW时间更短，提高了用户体验度。</p>
+<p>CMS的优点：并发收集、低停顿；</p>
+<p>CMS的缺点：</p>
+<ul>
+<li><p>对cpu资源敏感，会和服务抢资源 </p>
+</li>
+<li><p>无法处理<strong>浮动垃圾</strong></p>
+<ul>
+<li>浮动垃圾：在并发清理阶段，清理没有被标记的对象，可能在某一个区域清理完之后之后又new了一个对象，这个对象又变成垃圾了，这样的对象清理不了，只能等下一次GC清理，这种叫做浮动垃圾。下次GC就会干掉。</li>
+</ul>
+</li>
+<li><p>使用的回收算法是”<strong>标记-清除</strong>“算法会产生大量的空间碎片。可以通过设置参数<code>-XX:UserCMSCompactAtFullCollection</code>让jvm在执行完标记清除后再做整理 </p>
+</li>
+<li><p>有一个很大的问题 <strong>“concurrent mode failure” 并发模式失败</strong>。</p>
+<p>执行过程中的不确定性，会存在上一次垃圾回收还没执行完，然后垃圾回收又被触发。特别是在并发标记和并发清理阶段会出现，一边回收，系统一边运行，也许还没回收完就会触发full GC。此时就会进入stop the word，<strong>用serial old垃圾收集器来回收，效率会非常低。</strong></p>
+<ul>
+<li>场景：老年代快满了或者已经满了，此时在做并发标记或者并发清理时，用户线程还在执行，此时如果有一个大对象，老年代放不下了，就会stop the word，用serial old垃圾收集器来回收。</li>
+</ul>
+</li>
+</ul>
+<h4 id="CMS核心参数"><a href="#CMS核心参数" class="headerlink" title="CMS核心参数"></a>CMS核心参数</h4><p>Java的命令，有类似 <code>java -version</code>，一个”-“的参数，有 <code>java -X</code> 一个”X”的参数，有<code>java -XX</code> 两个”X”的参数，X越多代表命令越不稳定，将来的版本可能会把这些参数废除掉。X不是说性能不稳定，而是说在这个版本可用，但是这些功能将来的版本可能不支持</p>
+<p>老年代不会真的满了之后才触发FullGC，不配置参数，默认是到92%触发FullGC。</p>
+<ol>
+<li><p><code>-XX:+UseConcMarkSweepGC</code>：启用cms </p>
+</li>
+<li><p><code>-XX:ConcGCThreads</code>：并发的GC线程数</p>
+</li>
+<li><p><code>-XX:+UseCMSCompactAtFullCollection</code>：FullGC之后做压缩整理（减少碎片）,碎片整理也会stop the world，跟剩余存活对象数量有关，剩得越少效率越高，剩得越多效率越低。</p>
+</li>
+<li><p><code>-XX:CMSFullGCsBeforeCompaction</code>：多少次FullGC之后压缩一次，默认是0，代表每次FullGC后都会压缩一次。配3代表每3次FullGC压缩一次 (3,4通常一起配)。如果频繁full gc就2，3次一次。如果不频繁就配0 。</p>
+</li>
+<li><p><code>-XX:CMSInitiatingOccupancyFraction</code>: 当老年代使用达到该比例时会触发FullGC（默认是92，是百分比）。这个参数为了避免<strong>并发模式失败</strong>，具体根据机器配置去配，如果是高配可以适当调高，低配适当调低。如果配得太低，比如80，可能会导致老年代有20%永远用不到，浪费了资源。</p>
+</li>
+<li><p><code>-XX:+UseCMSInitiatingOccupancyOnly</code>：只使用设定的回收阈值(<code>-XX:CMSInitiatingOccupancyFraction</code>设定的值)，如果不指定，JVM仅在第一次使用设定值，后续则会自动调整。</p>
+</li>
+<li><p><code>-XX:+CMSScavengeBeforeRemark</code>：在CMS GC前启动一次minor gc，目的在于减少老年代对新生代的引用，降低CMS GC标记阶段时的开销，一般CMS的GC耗时 80%都在标记阶段。<strong>如果老年代和新生代有跨代的地方，CMS做标记的时候要标过去，如果在GC之前先MinorGC一次，就不用去新生代标记了，加快并发标记阶段</strong>跨代引用很少，配不配意义不大，Full GC会优先做老年代的收集，然后做MinorGC。</p>
+<p><strong>对象跨代</strong>：<code>Math math = new Math()</code> math对象已经挪到老年代了，但是它引用的user对象（User作为Math类的属性）还在新生代，还没有挪到老年代，user是math的成员变量，math对象中存储的是user对象的地址，user对象没有在math对象内部 </p>
+</li>
+<li><p><code>-XX:+CMSParallellnitialMarkEnabled</code>：表示在初始标记的时候多线程执行，缩短STW。</p>
+</li>
+<li><p><code>-XX:+CMSParallelRemarkEnabled</code>：在重新标记的时候多线程执行，缩短STW。</p>
+</li>
+</ol>
+<h2 id="垃圾收集算法底层实现"><a href="#垃圾收集算法底层实现" class="headerlink" title="垃圾收集算法底层实现"></a>垃圾收集算法底层实现</h2><h3 id="三色标记"><a href="#三色标记" class="headerlink" title="三色标记"></a>三色标记</h3><p>在并发标记过程中，因为标记期间应用线程还在继续跑，对象间的引用可能发生变化，<strong>多标记</strong>和<strong>漏标记</strong>的情况就可能发生。标记的是非垃圾对象。</p>
+<p>把遍历对象图过程中遇到的对象，按照**”是否访问过”**这个条件标记成白色、黑色、灰色三种颜色。</p>
+<ul>
+<li>白色：表示对象尚未被垃圾收集器访问过，在可达性分析刚刚开始的阶段，所有的对象都是白色的，若在分析结束的阶段，仍然是白色的对象，即代表不可达。</li>
+<li>黑色：表示对象已经被垃圾收集器访问过，而且这个<strong>对象的所有引用都已经扫描过</strong>。黑色的对象代表已经扫描过，它是安全存活的，如果有其他对象引用指向了黑色对象，无须重新扫描一遍。<strong>黑色对象不可能直接（不经过灰色对象）指向某个白色对象</strong>。</li>
+<li>灰色：表示对象以及被垃圾收集器访问过，但这个对象上至少有存在一个引用还没有被扫描过。</li>
+</ul>
+<p>一句话总结：默认都是白色，黑色代表分析完了，灰色代表分析过但是还没分析完。如果GC Roots可达性分析完了，还存在白色，白色就要被回收</p>
+<p><img src="http://image.changzhen0212.cn/img/202201141344491.png"></p>
+<p>看图，此时是在并发标记<strong>过程中</strong>，A中引用B，B中引用了C和D，C被扫描了，D还没有被扫描到，</p>
+<p>B中因为同时有已经扫描的C和未被扫描的D，所以B是灰色。D未扫描是白色，之后可能会变黑，C没有其他引用，就相当于它的所有成员变量都被扫描到了，所以是黑色。</p>
+<p>程序继续运行，可能出现一种情况，b.d=null, a.d=d。 b是灰色的，b中对d的引用设为空，从b就不会再扫描到d了，a是黑色的，虽然a引用了d，但是黑色不会再扫描。所以此时的d还是白色的，不会被扫描到。虽然它是白色的，但它不是垃圾对象。</p>
+<p>按照三色标记，d会被清除掉，但它不是垃圾对象，这种就属于<strong>漏标</strong>。</p>
+<p><strong>漏标</strong>通过读写屏障解决，有两种方案:</p>
+<ol>
+<li>增量更新：在做并发标记的时候，新增的引用用一个集合存起来，重新标记阶段，会对新增的引用重新扫描（把新增引用的源头A标记为灰色，重新扫描，就可以发现D了。重新标记的时候会STW）</li>
+<li>原始快照(SATB)：并发标记阶段，不会去管新增的引用，而是管之前B引用D，在赋值之前，把老的引用保存一个快照，放到一个集合中。在重新标记阶段时候，找到快照的目标扫描，把快照的目标都标记为黑色。此时如果A没有引用D，此时D就是个浮动垃圾，下次会被回收。</li>
+</ol>
+<p>增量更新和原始快照都是通过<strong>写屏障</strong>实现的</p>
+<p>所有的新增、删除引用，都是通过赋值操作。写屏障，在<strong>赋值操作前</strong>或者在<strong>赋值操作后</strong>，加入一些处理（类似AOP）。</p>
+<p>伪代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">post_write_barrier</span><span class="params">(oop* field, oop new_value)</span></span>&#123;</span><br><span class="line">	<span class="built_in">pre_write_barrier</span>(field); <span class="comment">// 写屏障-写前操作</span></span><br><span class="line">    *field = new_value;</span><br><span class="line">    <span class="built_in">post_write_barrier</span>(field, value); <span class="comment">// 写屏障-写后操作</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>写屏障实现SATB</strong>，在赋值操作之前，把旧的值放到remark</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pre_write_barrier</span><span class="params">(oop* field)</span></span>&#123;</span><br><span class="line">    oop old_value = *field; <span class="comment">//获取旧值</span></span><br><span class="line">    remark_set.<span class="built_in">add</span>(old_value); <span class="comment">// 记录原来的引用对象</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>写屏障实现增量更新</strong>，在赋值操作之后，把新的引用记录下来</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">post_write_barrier</span><span class="params">(oop* field, oop new_value)</span></span>&#123;</span><br><span class="line">    remark_set.<span class="built_in">add</span>(new_value); <span class="comment">//记录新引用的对象</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>写屏障是用队列实现的</strong>，为什么用队列呢</p>
+<p>频繁的写操作，如果写屏障要是出了问题，会影响写操作。</p>
+<p>把写屏障放到队列里异步处理，不能用同步操作，提升性能。</p>
+<p>垃圾收集器都是针对<strong>堆</strong>的，元空间几乎是没什么可回收的</p>
+<p>不同的垃圾收集器对于漏标的处理方式不同</p>
+<ul>
+<li><p>CMS：写屏障-增量更新</p>
+</li>
+<li><p>G1，Shenandoah：写屏障-原始快照SATB</p>
+</li>
+<li><p>ZGC：读屏障</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/11/JVM/JVM-04-%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84/" rel="prev" title="字节码结构">
+      <i class="fa fa-chevron-left"></i> 字节码结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/15/JVM/JVM-06-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B9%8BG1/" rel="next" title="垃圾回收器之G1">
+      垃圾回收器之G1 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">垃圾收集算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%90%86%E8%AE%BA"><span class="nav-number">1.1.</span> <span class="nav-text">分代收集理论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">标记复制算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E7%AE%97%E6%B3%95"><span class="nav-number">1.3.</span> <span class="nav-text">标记清除算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95"><span class="nav-number">1.4.</span> <span class="nav-text">标记整理算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">垃圾收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E7%9A%84%E5%B9%B6%E5%8F%91%E5%92%8C%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.1.</span> <span class="nav-text">垃圾收集器的并发和并行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Serial%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.2.</span> <span class="nav-text">Serial收集器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Parallel-Scavenge%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.3.</span> <span class="nav-text">Parallel Scavenge收集器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ParNew%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.4.</span> <span class="nav-text">ParNew收集器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CMS%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.5.</span> <span class="nav-text">CMS收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CMS%E6%A0%B8%E5%BF%83%E5%8F%82%E6%95%B0"><span class="nav-number">2.5.1.</span> <span class="nav-text">CMS核心参数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">垃圾收集算法底层实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0"><span class="nav-number">3.1.</span> <span class="nav-text">三色标记</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ChangZhen"
+      src="/images/head_icon.jpg">
+  <p class="site-author-name" itemprop="name">ChangZhen</p>
+  <div class="site-description" itemprop="description">不忘初心，方得始终</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ChangZhen</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
