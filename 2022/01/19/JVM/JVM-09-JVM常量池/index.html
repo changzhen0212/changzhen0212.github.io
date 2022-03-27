@@ -27,24 +27,24 @@
 <meta property="og:site_name" content="ChangZhen&#39;s Blog">
 <meta property="og:description" content="常量池存放的是编译期生成的字面量和符号引用  字面量：字面量就是指由字母、数字等构成的字符串或者数值常量。  字面量只能以右值方式出现，就是等号右边的值。  12int a &#x3D; 1;String s &#x3D; &quot;abc&quot;;  ​    1和”abc”都是字面量。  符号引用：属于编译原理方面的概念,是相对于直接引用来说的，主要包括下面几类常量： 被模块导出或者开放的包（Pac">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191022484.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201182158107.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191134875.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191146449.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191436390.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191455699.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191532444.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191546129.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191552252.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191637086.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201191626195.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201192209581.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280028763.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029008.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029798.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029354.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029799.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029277.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029107.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029224.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029246.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030808.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030076.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030631.png">
 <meta property="article:published_time" content="2022-01-18T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-03-27T15:44:46.424Z">
+<meta property="article:modified_time" content="2022-03-27T16:30:22.005Z">
 <meta property="article:author" content="ChangZhen">
 <meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image.changzhen0212.cn/img/202201191022484.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280028763.png">
 
 <link rel="canonical" href="http://changzhen0212.github.io/2022/01/19/JVM/JVM-09-JVM%E5%B8%B8%E9%87%8F%E6%B1%A0/">
 
@@ -204,7 +204,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:44:46" itemprop="dateModified" datetime="2022-03-27T23:44:46+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-28 00:30:22" itemprop="dateModified" datetime="2022-03-28T00:30:22+08:00">2022-03-28</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -285,7 +285,7 @@
 <p>代码验证,字符串常量池在堆中：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * jdk6：-Xms6M -Xmx6M -XX:PermSize=6M -XX:MaxPermSize=6M</span></span><br><span class="line"><span class="comment">    * jdk8：-Xms6M -Xmx6M -XX:MetaspaceSize=6M -XX:MaxMetaspaceSize=6M</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">       ArrayList&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++) &#123;</span><br><span class="line">           String str = String.valueOf(i).intern();</span><br><span class="line">           list.add(str);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://image.changzhen0212.cn/img/202201191022484.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280028763.png"></p>
 <h3 id="三种字符串操作"><a href="#三种字符串操作" class="headerlink" title="三种字符串操作"></a>三种字符串操作</h3><h4 id="直接赋值-只会在常量池中。"><a href="#直接赋值-只会在常量池中。" class="headerlink" title="直接赋值,只会在常量池中。"></a><strong>直接赋值,只会在常量池中。</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">&quot;abc&quot;</span>; <span class="comment">// s指向常量池中的引用</span></span><br></pre></td></tr></table></figure>
 
 
@@ -306,7 +306,7 @@
 <li>如果有，返回常量池中的字符串(的引用) – <strong>返回的是 字符串常量池中的字符串的引用</strong></li>
 <li>如果没有，会将此String对象包含的字符串添加到常量池中，并且返回此String对象的引用。– <strong>返回的是 字符串对象的引用(与上面对立，不是字符串常量池的引用)</strong></li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201182158107.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029008.png"></p>
 <h4 id="下面的代码创建了多少个-String-对象-打印结果是什么"><a href="#下面的代码创建了多少个-String-对象-打印结果是什么" class="headerlink" title="下面的代码创建了多少个 String 对象,打印结果是什么"></a>下面的代码创建了多少个 String 对象,打印结果是什么</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;he&quot;</span>) + <span class="keyword">new</span> String(<span class="string">&quot;llo&quot;</span>);</span><br><span class="line">String s2 = s1.intern();</span><br><span class="line">System.out.println(s1 == s2);</span><br></pre></td></tr></table></figure>
 
 <p>先说结果，不考虑GC的情况下</p>
@@ -318,10 +318,10 @@
 <p>JDK&gt;=1.7时，</p>
 <p><code>String s1 = new String(&quot;he&quot;) + new String(&quot;llo&quot;);</code>这一行代码，会先在字符串常量池中创建两个字面量 “he”,”llo”，还有堆内字符串常量池外创建两个对象”he”,”llo”，还有最后在堆内字符串常量池外创建的对象”hello”，s1是”hello”的引用。这时候创建了5个对象。</p>
 <p><code>String s2 = s1.intern();</code>这行代码，由于字符串常量池中没有”hello”这个字面量，所以会去堆中找”hello”的引用，也就是s1，所以s1==s2为true。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191134875.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029798.png"></p>
 <p>JDK&lt;=1.6时，第一行代码操作是一样的，只不过字符串常量池是在永久代中。</p>
 <p>第二行代码在执行<code>intern()</code>时，如果字符串常量池中没有”hello”，会创建一个”hello”字面量存放在字符串常量池。此时是6个对象。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191146449.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029354.png"></p>
 <h3 id="几个示例"><a href="#几个示例" class="headerlink" title="几个示例"></a>几个示例</h3><p>示例1：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String s0=<span class="string">&quot;abcde&quot;</span>;</span><br><span class="line">String s1=<span class="string">&quot;abcde&quot;</span>;</span><br><span class="line">String s2=<span class="string">&quot;abc&quot;</span> + <span class="string">&quot;de&quot;</span>;</span><br><span class="line">System.out.println( s0==s1 ); <span class="comment">//true</span></span><br><span class="line">System.out.println( s0==s2 ); <span class="comment">//true</span></span><br></pre></td></tr></table></figure>
 
@@ -347,13 +347,13 @@
 </li>
 </ul>
 <p>查看字节码可知，第三行代码<code>String s2 = &quot;abc&quot; + new String(&quot;de&quot;);</code>会被优化成<code>StringBuilder.append(&quot;abc&quot;).apend(&quot;de&quot;)</code></p>
-<p><img src="http://image.changzhen0212.cn/img/202201191436390.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029799.png"></p>
 <p>示例3：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">String a1 = <span class="string">&quot;a1&quot;</span>;</span><br><span class="line">String b1 = <span class="string">&quot;a&quot;</span> + <span class="number">1</span>;</span><br><span class="line">System.out.println(a1 == b1); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">String a2 = <span class="string">&quot;atrue&quot;</span>;</span><br><span class="line">String b2 = <span class="string">&quot;a&quot;</span> + <span class="string">&quot;true&quot;</span>;</span><br><span class="line">System.out.println(a2 == b2); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">String a3 = <span class="string">&quot;a3.4&quot;</span>;</span><br><span class="line">String b3 = <span class="string">&quot;a&quot;</span> + <span class="number">3.4</span>;</span><br><span class="line">System.out.println(a3 == b3); <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
 
 <p>解析：JVM对于字符串常量的「+」操作，编译期间会将常量字符串的”+”连接优化为连接后的值。比如<code>&quot;a&quot;+1</code>在编译器优化后生成的class文件中就已经是<code>&quot;a1&quot;</code>了。所以上面的几个结果都为true。</p>
 <p>查看JVM指令码：</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191455699.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029277.png"></p>
 <p>示例4：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;ab&quot;</span>;</span><br><span class="line">String s1 = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">String s2 = <span class="string">&quot;a&quot;</span> + s1;</span><br><span class="line">System.out.println(s0 == s2); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
 
@@ -372,7 +372,7 @@
 <p>解析：</p>
 <p>跟上一个示例相比，第二行代码多了个final，结果就会不同。因为final修饰的变量，在编译时被解析为常量值的一个本地拷贝存储到自己的常量池中或嵌入到它的字节码流中。所以<code>&quot;a&quot;+s1</code>和<code>&quot;a&quot;+:&quot;b&quot;</code>效果相同，所以结果为true.</p>
 <p>JVM指令码：</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191532444.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029107.png"></p>
 <p>示例6：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    String s0 = <span class="string">&quot;ab&quot;</span>;</span><br><span class="line">    <span class="keyword">final</span> String s1 = getB();</span><br><span class="line">    String s2 = <span class="string">&quot;a&quot;</span> + s1;</span><br><span class="line">    System.out.println(s0 == s2); <span class="comment">// false</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">getB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;b&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -381,14 +381,14 @@
 <p>只有在程序运行之后，才能调用getB()方法，将”a”和返回值动态链接并分配地址给s2。</p>
 <p>所以s0!=s2</p>
 <p>JVM指令码：</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191546129.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029224.png"></p>
 <p>示例7：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String s0 = <span class="string">&quot;a&quot;</span> + <span class="string">&quot;b&quot;</span> + <span class="string">&quot;c&quot;</span>;  <span class="comment">//就等价于String s = &quot;abc&quot;;</span></span><br><span class="line">String a = <span class="string">&quot;a&quot;</span>;</span><br><span class="line">String b = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">String c = <span class="string">&quot;c&quot;</span>;</span><br><span class="line">String s1 = a + b + c;</span><br><span class="line">System.out.println(s0 == s1); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
 
 <p>解析：</p>
 <p><code>String s1 = a + b + c;</code>会被优化成<code>StringBuilder.append(a).append(b).append(c).toString()</code>，然后作为一个新的字符串对象保存在堆中非字符串常量池位置。所以s0!=s1</p>
 <p>JVM指令码：</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191552252.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280029246.png"></p>
 <p>示例8：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String s1 = <span class="keyword">new</span> String(<span class="string">&quot;test&quot;</span>);</span><br><span class="line">System.out.println(s1 == s1.intern());   <span class="comment">//false</span></span><br><span class="line"></span><br><span class="line">String s2 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;abc&quot;</span>).toString();</span><br><span class="line">System.out.println(s2 == s2.intern());  <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
 
@@ -399,9 +399,9 @@
 <li><code>s1.intern();</code>会先去字符串常量池中找，如果找到就返回。所以s1!=s1.intern()</li>
 <li>下面的new StringBuilder()同理</li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201191637086.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030808.png"></p>
 <p>JVM指令码：</p>
-<p><img src="http://image.changzhen0212.cn/img/202201191626195.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030076.png"></p>
 <p>示例9：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String str1 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;计算机&quot;</span>).append(<span class="string">&quot;技术&quot;</span>).toString();</span><br><span class="line">System.out.println(str1 == str1.intern());  <span class="comment">//true</span></span><br><span class="line"></span><br><span class="line">String str2 = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;ja&quot;</span>).append(<span class="string">&quot;va&quot;</span>).toString();</span><br><span class="line">System.out.println(str2 == str2.intern());  <span class="comment">//false</span></span><br></pre></td></tr></table></figure>
 
@@ -422,7 +422,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在值小于127时可以使用对象池</span></span><br><span class="line">Integer i1 = <span class="number">127</span>;  <span class="comment">// 这种调用底层实际是执行的Integer.valueOf(127)，里面用到了IntegerCache对象池</span></span><br><span class="line">Integer i2 = <span class="number">127</span>;</span><br><span class="line">System.out.println(i1 == i2);<span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 用new关键词新生成对象不会使用对象池</span></span><br><span class="line">Integer i5 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">Integer i6 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">System.out.println(i5 == i6);<span class="comment">// false</span></span><br></pre></td></tr></table></figure>
 
 <p>查看JVM指令码可知，<code>Integer i1 = 127;</code>赋值使用的是Integer.valueOf()，new的方式调用了<code>&lt;init&gt;</code></p>
-<p><img src="http://image.changzhen0212.cn/img/202201192209581.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280030631.png"></p>
 
     </div>
 
