@@ -457,7 +457,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:15:21" itemprop="dateModified" datetime="2022-03-27T23:15:21+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:45:17" itemprop="dateModified" datetime="2022-03-29T14:45:17+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -618,17 +618,17 @@
 <p>生成<code>.hprof</code>文件,通过可视化程序打开,比如Java VisualVM(<code>jvisualvm</code>)</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jvisualvm</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://image.changzhen0212.cn/img/202201161644102.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443416.png"></p>
 <p>选择刚才到导出的.hprof文件。</p>
 <p>显示的是导出文件的那一刻的堆使用信息。和<code>jmap -histo</code>打印的信息差不多。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201161647792.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443688.png"></p>
 <p>可以设置参数，OOM时自动生成堆dump快照。</p>
 <figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">-XX</span>:<span class="string">+HeapDumpOnOutOfMemoryError</span></span><br><span class="line"><span class="meta">-XX</span>:<span class="string">HeapDumpPath=./ #（路径）</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="OOMdemo"><a href="#OOMdemo" class="headerlink" title="OOMdemo"></a>OOMdemo</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> ChangZhen</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OOMTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> List&lt;Object&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// JVM设置</span></span><br><span class="line">    <span class="comment">// -Xms10M -Xmx10M -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=D:\jvm.dump</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        List&lt;Object&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> j = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            list.add(<span class="keyword">new</span> User(i++, UUID.randomUUID().toString()));</span><br><span class="line">            <span class="keyword">new</span> User(j--, UUID.randomUUID().toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>OOM时生成堆dump快照，装入jvisualvm</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171111128.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443693.png"></p>
 <h2 id="jstack命令"><a href="#jstack命令" class="headerlink" title="jstack命令"></a>jstack命令</h2><p>用于生成虚拟机当前时刻的线程快照。</p>
 <p>线程快照就是当前虚拟机内每一条线程正在执行的方法堆栈的集合，生成线程快照的目的通常是定位线程出现长时间停顿的原因，如线程间死锁、死循环、请求外部资源导致的长时间挂起等，都是导致线程长时间停顿的常见原因。线程出现停顿时通过jstack来查看各个线程的调用堆栈，就可以获知没有响应的线程到底在后台做些什么事情，或者等待着什么资源。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jstack [ option ] vmid</span><br></pre></td></tr></table></figure>
@@ -704,7 +704,7 @@
 <p><code>jstack -l 16076</code> 跟到最后</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">Found one Java-level deadlock:</span><br><span class="line">=============================</span><br><span class="line">&quot;Thread-1&quot;:</span><br><span class="line">  waiting to lock monitor 0x00000000030ca2e8 (object 0x000000076b1a9290, a java.lang.Object),</span><br><span class="line">  which is held by &quot;Thread-0&quot;</span><br><span class="line">&quot;Thread-0&quot;:</span><br><span class="line">  waiting to lock monitor 0x00000000030ca4f8 (object 0x000000076b1a92a0, a java.lang.Object),</span><br><span class="line">  which is held by &quot;Thread-1&quot;</span><br><span class="line"></span><br><span class="line">Java stack information for the threads listed above:</span><br><span class="line">===================================================</span><br><span class="line">&quot;Thread-1&quot;:</span><br><span class="line">        at com.cz.springbootstartdemo.test.DeadLockTest.lambda$main$1(DeadLockTest.java:33)</span><br><span class="line">        - waiting to lock &lt;0x000000076b1a9290&gt; (a java.lang.Object)</span><br><span class="line">        - locked &lt;0x000000076b1a92a0&gt; (a java.lang.Object)</span><br><span class="line">        at com.cz.springbootstartdemo.test.DeadLockTest$$Lambda$2/2121055098.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Thread.java:748)</span><br><span class="line">&quot;Thread-0&quot;:</span><br><span class="line">        at com.cz.springbootstartdemo.test.DeadLockTest.lambda$main$0(DeadLockTest.java:20)</span><br><span class="line">        - waiting to lock &lt;0x000000076b1a92a0&gt; (a java.lang.Object)</span><br><span class="line">        - locked &lt;0x000000076b1a9290&gt; (a java.lang.Object)</span><br><span class="line">        at com.cz.springbootstartdemo.test.DeadLockTest$$Lambda$1/1225358173.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Thread.java:748)</span><br><span class="line"></span><br><span class="line">Found 1 deadlock.</span><br></pre></td></tr></table></figure>
 
-<h3 id="jvisualvm-自动检测死锁"><a href="#jvisualvm-自动检测死锁" class="headerlink" title="jvisualvm 自动检测死锁"></a>jvisualvm 自动检测死锁</h3><p><img src="http://image.changzhen0212.cn/img/202201171118280.png"></p>
+<h3 id="jvisualvm-自动检测死锁"><a href="#jvisualvm-自动检测死锁" class="headerlink" title="jvisualvm 自动检测死锁"></a>jvisualvm 自动检测死锁</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443630.png"></p>
 <h3 id="jstack找出占用cpu最高的线程堆栈信息"><a href="#jstack找出占用cpu最高的线程堆栈信息" class="headerlink" title="jstack找出占用cpu最高的线程堆栈信息"></a>jstack找出占用cpu最高的线程堆栈信息</h3><ol>
 <li>使用命令<code>top -p &lt;pid&gt;</code>，显示进程的内存情况，pid是java进程号，比如19663</li>
 <li>按H，获取每个线程的内存情况 </li>
@@ -1207,7 +1207,7 @@
 
 <p>场景分析：</p>
 <p>堆内存为1536M，新生代512M，则老年代为1536-512=1024M=1G，新生代中配置了参数<code>-XX:SurvivorRatio=6</code>所以Eden:S0:S1=6:1:1，Eden=384M,S0=S1=64M。方法去256M，栈256K。得出下图</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171412712.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443484.png"></p>
 <p>分析Full GC,7天，500多次，200多秒，平均到每天是70多次，28秒多，再平均到每小时，每小时3次。</p>
 <p>分析Young GC，7天，1万多次，500多秒，平均到每天是1428次，平均到每小时，59次，差不多每分钟都会进行一次Young GC</p>
 <p>1G的老年代，每20分钟就有700多M的对象挪到老年代，这是不正常的。老年代存放的都是一些老顽固对象，不应该有周期性的频繁变动，此时应该扩大新生代。</p>
@@ -1215,19 +1215,19 @@
 <p>通常触发老年代空间分配担保机制是因为老年代比较小。</p>
 <p>为了更快看到效果，2秒一次Full GC，2次Young GC。</p>
 <p><code>jstat -gc pid 轮询时间 查看次数</code> 打印变化</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171504659.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291443802.png"></p>
 <p>jinfo -flags查看参数是否生效</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171510012.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444058.png"></p>
 <p>先调cms,<code>-XX:CMSInitiatingOccupancyFraction</code>: 当老年代使用达到该比例时会触发FullGC</p>
 <p>cms触发GC比例调整到92</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171516863.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444484.png"></p>
 <p>发现并没有生效，Full GC依然很频繁</p>
 <p>适当调新生代</p>
 <p>新生代适当调整Eden区和Survivor区比例 8:1:1</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171533812.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444746.png"></p>
 <p>Full GC依旧频繁</p>
 <p>调整新生代和老年代的大小 新生代调整为1G</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171538547.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444992.png"></p>
 <p>Full GC 更频繁了 由之前的2秒1次变为2秒2次。</p>
 <p>老年代比新生代触发得还多的原因</p>
 <ol>
@@ -1237,17 +1237,17 @@
 </ol>
 <p>考虑到可能是因为老年代空间分配担保机制，当新生代对象的大小超出老年代，会先做一次full GC，在做minor gc, minor gc后老年代又达到了95%，又一次full gc，看是否能从代码着手优化</p>
 <p>代码中每次要构建出5000个User对象，可能是User对象太大，减少每次构建的User对象，改为500次。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201171546701.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444028.png"></p>
 <p>不再有Full GC 问题解决</p>
 <h2 id="阿里巴巴Arhtas调优工具"><a href="#阿里巴巴Arhtas调优工具" class="headerlink" title="阿里巴巴Arhtas调优工具"></a>阿里巴巴Arhtas调优工具</h2><h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>下载后执行jar包</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar arthas-boot.jar</span><br></pre></td></tr></table></figure>
 
 <p>选择要查看的java进程</p>
-<p><img src="http://image.changzhen0212.cn/img/202201181148183.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444278.png"></p>
 <p>启动成功。</p>
 <h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><ul>
 <li><p>输入<code>dashboard</code>可以查看整个进程的运行情况，线程、内存、GC、运行环境信息</p>
-<p><img src="http://image.changzhen0212.cn/img/202201181544835.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444980.png"></p>
 </li>
 <li><p>输入<code>thread</code>可以查看线程详细情况</p>
 </li>
@@ -1335,11 +1335,11 @@
 
 <p>分析GC日志:<a target="_blank" rel="noopener" href="https://gceasy.io/">gceasy.io</a></p>
 <p>分析刚才生成的CMS日志</p>
-<p><img src="http://image.changzhen0212.cn/img/202201181013437.png"></p>
-<p><img src="http://image.changzhen0212.cn/img/202201181013294.png"></p>
-<p><img src="http://image.changzhen0212.cn/img/202201181013878.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291444659.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291445580.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291445209.png"></p>
 <p>G1生成的日志</p>
-<p><img src="http://image.changzhen0212.cn/img/202201181015146.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291445507.png"></p>
 
       
     </div>
@@ -1390,7 +1390,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:14:47" itemprop="dateModified" datetime="2022-03-27T23:14:47+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:43:03" itemprop="dateModified" datetime="2022-03-29T14:43:03+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1425,7 +1425,7 @@
 <li>中型Region（Medium Region）：容量固定为32MB，用于放置大于等于256KB但小于4MB的对象。</li>
 <li>大型Region（Large Region）：容量不固定，可以动态变化，但必须为2MB的整数倍，用于放置4MB或以上的大对象。每个大型Region中只会存放一个大对象，这也预示着虽然名字叫作「大型Region」，但它的实际容量完全有可能小于中型Region，最小容量可低至4MB。大型Region在ZGC的实现中是不会被重分配（重分配是ZGC的一种处理动作，用于复制对象的收集器阶段）的，因为复制一个大对象的代价非常高昂。</li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201151648941.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442492.png"></p>
 <h3 id="ZGC并发-整理算法的实现"><a href="#ZGC并发-整理算法的实现" class="headerlink" title="ZGC并发-整理算法的实现"></a>ZGC并发-整理算法的实现</h3><p>ZGC收集器采用了<strong>染色指针</strong>技术。染色指针是一种直接<strong>将少量额外的信息存储在指针上</strong>的技术。</p>
 <h4 id="硬件和操作系统小知识"><a href="#硬件和操作系统小知识" class="headerlink" title="硬件和操作系统小知识"></a>硬件和操作系统小知识</h4><p>在64位系统中，理论可以访问的内存高达<code>2的64次幂</code>字节，实际上，在AMD64架构中只支持到52位（4PB）的地址总线和48位（256TB）的虚拟地址空间，所以目前64位的硬件实际能够支持的最大内存只有256TB。操作系统也会施加自己的约束，64位的Linux则分别支持47位（128TB）的进程虚拟地址空间和46位（64TB）的物理地址空间，64位的Windows系统只支持44位（16TB）的物理地址空间。</p>
 <h4 id="染色指针"><a href="#染色指针" class="headerlink" title="染色指针"></a>染色指针</h4><p>每个对象有一个64位指针，这64位被分为：</p>
@@ -1435,7 +1435,7 @@
 <li>1位：Remapped标识，设置此位的值后，对象未指向relocation set中（relocation set表示需要GC的Region集合）；</li>
 <li>1位：Marked1标识；</li>
 <li>1位：Marked0标识，和上面的Marked1都是标记对象用于辅助GC；</li>
-<li>42位：对象的地址（所以它可以支持2^42=4T内存）<br><img src="http://image.changzhen0212.cn/img/202201151724831.png"></li>
+<li>42位：对象的地址（所以它可以支持2^42=4T内存）<br><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442162.png"></li>
 </ul>
 <h4 id="为什么有2个mark标记？"><a href="#为什么有2个mark标记？" class="headerlink" title="为什么有2个mark标记？"></a>为什么有2个mark标记？</h4><p>每一个GC周期开始时，会交换使用的标记位，使上次GC周期中修正的已标记状态失效，所有引用都变成未标记。</p>
 <ul>
@@ -1448,7 +1448,7 @@
 <li>染色指针可以大幅减少在垃圾收集过程中内存屏障的使用数量，ZGC只使用了读屏障。</li>
 <li>颜色指针具备强大的扩展性，它可以作为一种可扩展的存储结构用来记录更多与对象标记、重定位过程相关的数据，以便日后进一步提高性能。</li>
 </ol>
-<h3 id="ZGC的运作过程"><a href="#ZGC的运作过程" class="headerlink" title="ZGC的运作过程"></a>ZGC的运作过程</h3><p><img src="http://image.changzhen0212.cn/img/202201161155666.png"></p>
+<h3 id="ZGC的运作过程"><a href="#ZGC的运作过程" class="headerlink" title="ZGC的运作过程"></a>ZGC的运作过程</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442780.png"></p>
 <p>分为四个大的阶段。四个阶段都是并发执行的，仅是两个阶段中间会存在短暂的停顿小阶段</p>
 <ul>
 <li><p><strong>并发标记（Concurrent Mark）</strong>：与G1一样，并发标记是遍历对象图做可达性分析的阶段，它的初始标记(<strong>Mark Start</strong>)和最终标记(<strong>Mark End</strong>)也会STW，与G1不同的是，ZGC的标记是在指针上而不是在对象上进行的，标记阶段会更新<strong>染色指针</strong>中的Marked 0、 Marked 1标志位。</p>
@@ -1532,7 +1532,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:14:36" itemprop="dateModified" datetime="2022-03-27T23:14:36+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:42:37" itemprop="dateModified" datetime="2022-03-29T14:42:37+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1590,7 +1590,7 @@
 <p>G1对大对象的定义：大小超过了<strong>一个Region容量一半</strong>的对象。</p>
 <p>超过了整个Region容量的超级大对象，会被存放在<strong>N个连续的Humongous Region</strong>之中，G1的大多数行为都把Humongous Region作为老年代的一部分来进行看待。</p>
 <p>Full GC的时候会回收新生代、老年代和Humongous区。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201151215652.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442909.png"></p>
 <h3 id="G1回收内存思路"><a href="#G1回收内存思路" class="headerlink" title="G1回收内存思路"></a>G1回收内存思路</h3><p>G1收集器将Region作为单次回收的最小单元，即每次收集到的内存空间都是Region大小的整数倍。这样可以有计划地避免在整个Java堆中进行全区域的垃圾收集。</p>
 <p>让G1收集器去跟踪各个Region里面的垃圾堆积的「价值」大小。</p>
 <p><strong>价值</strong>：即回收所获得的空间大小以及回收所需时间的经验值，在后台维护一个优先级列表，每次根据用户设定允许的<strong>GC停顿STW时间</strong>（使用参数<code>-XX：MaxGCPauseMillis</code>指定，默认值是200毫<br>秒），优先处理回收价值收益最大的那些Region。</p>
@@ -1608,7 +1608,7 @@
 </ol>
 </li>
 </ol>
-<p><img src="http://image.changzhen0212.cn/img/202201151237129.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442512.png"></p>
 <h3 id="G1垃圾收集特点"><a href="#G1垃圾收集特点" class="headerlink" title="G1垃圾收集特点"></a>G1垃圾收集特点</h3><ul>
 <li><p>G1收集器除了并发标记外，其余阶段都要完全暂停用户线程STW。</p>
 </li>
@@ -1701,7 +1701,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:14:19" itemprop="dateModified" datetime="2022-03-27T23:14:19+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:41:54" itemprop="dateModified" datetime="2022-03-29T14:41:54+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1756,7 +1756,7 @@
 <li><p>  缺点：将可用内存缩小为了原来的一半，浪费空间</p>
 </li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201140657660.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441551.png"></p>
 <h3 id="标记清除算法"><a href="#标记清除算法" class="headerlink" title="标记清除算法"></a>标记清除算法</h3><p>分为<strong>标记阶段</strong>和<strong>清除阶段</strong>。标记存活的对象，统一回收未被标记的对象（一般是这种）。也可以反过来标记出所有需要回收的对象，标记完成后统一回收所有被标记的对象。</p>
 <ul>
 <li><p>缺点：</p>
@@ -1768,11 +1768,11 @@
 </ol>
 </li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201140703183.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441837.png"></p>
 <h3 id="标记整理算法"><a href="#标记整理算法" class="headerlink" title="标记整理算法"></a>标记整理算法</h3><p>标记过程与标记-清除算法一样，但是后续步骤不是直接对可回收对象回收，而是让所有存活的对象向一端移动，然后直接清理掉边界以外的内存</p>
-<p><img src="http://image.changzhen0212.cn/img/202201140705392.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441020.png"></p>
 <h2 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h2><p>如果说收集算法是内存回收的方法论，那垃圾收集器就是内存回收的实践者</p>
-<p><img src="http://image.changzhen0212.cn/img/202201140930589.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441926.png"></p>
 <p>为什么有这么多垃圾收集器，因为他们都不够完美。从最早的Serial串行，到Parallel并行，再到CMS是一个不断完善的过程。到目前为止也没有一个完美的垃圾收集器</p>
 <h3 id="垃圾收集器的并发和并行"><a href="#垃圾收集器的并发和并行" class="headerlink" title="垃圾收集器的并发和并行"></a>垃圾收集器的并发和并行</h3><p>联系垃圾收集器的上下文语境</p>
 <ul>
@@ -1783,7 +1783,7 @@
 
 <p>是最基本、历史最悠久的垃圾收集器。是<strong>单线程</strong>的，只会用一条垃圾收集线程去完成垃圾收集工作，在进行垃圾收集工作时候必须暂停其他工作线程，STW stop the world，直到收集结束</p>
 <p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201141030642.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441897.png"></p>
 <h3 id="Parallel-Scavenge收集器"><a href="#Parallel-Scavenge收集器" class="headerlink" title="Parallel Scavenge收集器"></a>Parallel Scavenge收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseParallelGC // 新生代</span><br><span class="line">-XX:+UseParallelOldGC // 老年代</span><br></pre></td></tr></table></figure>
 
 <p>就是Serial的<strong>多线程</strong>版本, 默认收集线程数跟cpu核数相同，通过<code>-XX:ParallelGCThreads</code> 指定收集线程数，通常不推荐修改。</p>
@@ -1796,7 +1796,7 @@
 </ul>
 <p><strong>吞吐量：cpu中用于运行用户代码的时间与cpu总消耗时间的比值</strong></p>
 <p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201141039037.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441943.png"></p>
 <p>CMS是老年代的收集器，无法与CMS配合使用，因此有了ParNew</p>
 <h3 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-XX:UseParNewGC</span><br></pre></td></tr></table></figure>
 
@@ -1804,7 +1804,7 @@
 
 <p>跟Parallel很类似，区别主要是它可以和CMS收集器配合使用。</p>
 <p><strong>新生代采用复制算法，老年代采用标记-整理算法</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201141035758.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441941.png"></p>
 <h3 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseConcMarkSweepGC // 老年代</span><br></pre></td></tr></table></figure>
 
 <p><strong>使用标记-清除算法</strong></p>
@@ -1823,7 +1823,7 @@
 <li><p>并发重置：重置本次GC过程的标记数据。下次会重新标记。</p>
 </li>
 </ol>
-<p><img src="http://image.changzhen0212.cn/img/202201141046413.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441999.png"></p>
 <p><strong>CMS对比Parallel</strong></p>
 <p>整个垃圾收集的过程CMS&gt;Parallel，但是CMS的stop the world时间要远远小于Parallel，用户体验很好。</p>
 <p>Parallel更在乎吞吐量，CMS牺牲了整个垃圾收集过程的时间，换来STW时间更短，提高了用户体验度。</p>
@@ -1877,7 +1877,7 @@
 <li>灰色：表示对象以及被垃圾收集器访问过，但这个对象上至少有存在一个引用还没有被扫描过。</li>
 </ul>
 <p>一句话总结：默认都是白色，黑色代表分析完了，灰色代表分析过但是还没分析完。如果GC Roots可达性分析完了，还存在白色，白色就要被回收</p>
-<p><img src="http://image.changzhen0212.cn/img/202201141344491.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291441401.png"></p>
 <p>看图，此时是在并发标记<strong>过程中</strong>，A中引用B，B中引用了C和D，C被扫描了，D还没有被扫描到，</p>
 <p>B中因为同时有已经扫描的C和未被扫描的D，所以B是灰色。D未扫描是白色，之后可能会变黑，C没有其他引用，就相当于它的所有成员变量都被扫描到了，所以是黑色。</p>
 <p>程序继续运行，可能出现一种情况，b.d=null, a.d=d。 b是灰色的，b中对d的引用设为空，从b就不会再扫描到d了，a是黑色的，虽然a引用了d，但是黑色不会再扫描。所以此时的d还是白色的，不会被扫描到。虽然它是白色的，但它不是垃圾对象。</p>
@@ -1967,7 +1967,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:13:54" itemprop="dateModified" datetime="2022-03-27T23:13:54+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:40:56" itemprop="dateModified" datetime="2022-03-29T14:40:56+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -2027,8 +2027,8 @@
 <td>1111 1111</td>
 </tr>
 </tbody></table>
-<p><img src="http://image.changzhen0212.cn/img/202201100944443.png"></p>
-<h3 id="class文件结构"><a href="#class文件结构" class="headerlink" title="class文件结构"></a>class文件结构</h3><p><img src="http://image.changzhen0212.cn/img/202201101016188.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439868.png"></p>
+<h3 id="class文件结构"><a href="#class文件结构" class="headerlink" title="class文件结构"></a>class文件结构</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439942.png"></p>
 <p>查看class文件方法，二进制打开，看tags标识位，然后看class_index指向的是常量池名称和方法描述符</p>
 <p>常量池中看tags，然后是length，表示后面多少位是此常量池的数据。</p>
 <h3 id="常量池"><a href="#常量池" class="headerlink" title="常量池"></a>常量池</h3><p>常量池可以看作class文件里的资源仓库(比如Java类定的方法和变量信息), 类的信息的描述信息都是通过索引去常量池中获取。</p>
@@ -2047,7 +2047,7 @@
 </ul>
 </li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201102114093.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439250.png"></p>
 <h3 id="描述信息"><a href="#描述信息" class="headerlink" title="描述信息"></a>描述信息</h3><p>JVM规范中，每个字段或者变量都有<strong>描述信息</strong>，描述信息主要有：<strong>数据类型，方法参数列表,返回值类型</strong>等。<br>基本参数类型和void类型都是用一个大写的字符来表示，对象类型是通过一个大写L加全类名表示，这么做的好处就是在保证jvm能读懂class文件的情况下尽量的压缩class文件体积</p>
 <ul>
 <li>基本数据类型表示:<ul>
@@ -2133,18 +2133,18 @@
 <li><p>根据入口索引即可定位到常量池的具体字面量</p>
 </li>
 </ol>
-<p><img src="http://image.changzhen0212.cn/img/202201100944443.png"></p>
-<h3 id="class文件结构（前半部分）"><a href="#class文件结构（前半部分）" class="headerlink" title="class文件结构（前半部分）"></a>class文件结构（前半部分）</h3><p><img src="http://image.changzhen0212.cn/img/202201101016188.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439298.png"></p>
+<h3 id="class文件结构（前半部分）"><a href="#class文件结构（前半部分）" class="headerlink" title="class文件结构（前半部分）"></a>class文件结构（前半部分）</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439556.png"></p>
 <p>上一节分析了两个常量池，后续的常量池大同小异，不再分析。</p>
 <p>常量池结束是在22行偏移量06处结束。</p>
 <p><strong>编译出来的是静态常量池，程序启动时会加载到运行时常量池中</strong></p>
 <p>22行07开始是访问标识符号。</p>
-<h2 id="访问标识符"><a href="#访问标识符" class="headerlink" title="访问标识符"></a>访问标识符</h2><p><img src="http://image.changzhen0212.cn/img/202201110644988.png"></p>
+<h2 id="访问标识符"><a href="#访问标识符" class="headerlink" title="访问标识符"></a>访问标识符</h2><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439921.png"></p>
 <p>访问标识符占用二个字节: 00 21，查表并没有21，所以此处是两个值通过位运算<code>或</code>得出的。0x0021 = 0x0020|0x0001 位运算。所以class的访问权限标识符是<code>ACC_PUBLIC</code>和<code>ACC_SUPER</code>。对应反编译代码中flags。</p>
 <h2 id="类索引、父类索引"><a href="#类索引、父类索引" class="headerlink" title="类索引、父类索引"></a>类索引、父类索引</h2><p>接下来是类索引、父类索引分别占用两个字节：00 03 00 04</p>
-<p><img src="http://image.changzhen0212.cn/img/202201110651827.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439414.png"></p>
 <p>对应常量池索引#3，#4，分别指向当前类和父类的名字</p>
-<p><img src="http://image.changzhen0212.cn/img/202201110656468.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439168.png"></p>
 <p>得出当前类为<code>com/example/jvm/ByteCodeDemo</code>，父类为<code>java/lang/Object</code></p>
 <h2 id="接口信息"><a href="#接口信息" class="headerlink" title="接口信息"></a>接口信息</h2><p>当前演示类没有实现接口，换一个类演示</p>
 <h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.jvm;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** <span class="doctag">@author</span> ChangZhen */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ByteCodeDemo2</span> <span class="keyword">implements</span> <span class="title">Serializable</span>, <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String userName;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getUserName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> userName;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUserName</span><span class="params">(String userName)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.userName = userName;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -2153,15 +2153,15 @@
 
 
 
-<h3 id="字节码二进制"><a href="#字节码二进制" class="headerlink" title="字节码二进制"></a>字节码二进制</h3><p><img src="http://image.changzhen0212.cn/img/202201110700860.png"></p>
+<h3 id="字节码二进制"><a href="#字节码二进制" class="headerlink" title="字节码二进制"></a>字节码二进制</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439585.png"></p>
 <h3 id="分析接口计数器"><a href="#分析接口计数器" class="headerlink" title="分析接口计数器"></a>分析接口计数器</h3><p>26行开始，00 02 00 05 00 06 前两个字节是接口标识位，表示实现了几个接口。后四个字节指向常量池中索引，是具体实现的接口</p>
 <p>实现的第一个接口：00 05，指向常量池索引 #5, <code>#5 = Class  #26       // java/io/Serializable</code></p>
 <p>#5 指向 #26 <code>java/io/Serializable</code></p>
 <p>实现的第二个接口：00 06，指向常量池索引 #6，<code>#6 = Class  #27       // java/lang/Cloneable</code></p>
 <p>#6 指向 #27 <code>java/lang/Cloneable</code></p>
-<p><img src="http://image.changzhen0212.cn/img/202201110704586.png"></p>
-<p><img src="http://image.changzhen0212.cn/img/202201110707841.png"></p>
-<p><img src="http://image.changzhen0212.cn/img/202201110946440.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439877.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439823.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291439377.png"></p>
 <p>对比一开始没有实现接口的class，紧挨着父类索引的是两个字节 00 00。</p>
 <p>所以用<code>00 00</code>表示此类没有实现的接口</p>
 <p><strong>由于java记录实现接口数量是由两个字节记录，所以java最多可以实现 FFFF = 十进制 65535 个接口</strong></p>
@@ -2169,37 +2169,37 @@
 <p><strong>分析文件回到一开始没有实现接口的class</strong></p>
 <p>22行紧接着接口00 00 后面的是 00 01 00 02 00 05 00 06 00 00</p>
 <p>00 01 表示只有一个字段，也就是代码中的userName</p>
-<p><img src="http://image.changzhen0212.cn/img/202201110955407.png"></p>
-<h3 id="字段表结构"><a href="#字段表结构" class="headerlink" title="字段表结构"></a>字段表结构</h3><p><img src="http://image.changzhen0212.cn/img/202201111002486.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440188.png"></p>
+<h3 id="字段表结构"><a href="#字段表结构" class="headerlink" title="字段表结构"></a>字段表结构</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440123.png"></p>
 <p>00 02 表示字段权限修饰符，查下表得字段为 <code>ACC_PRIVATE</code>,即字段为 private修饰，与代码中一致</p>
-<p><img src="http://image.changzhen0212.cn/img/202201111000068.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440032.png"></p>
 <p>00 05 00 06 分别是字段名称索引 和 字段描述索引</p>
 <p>对应常量池中的 #5 和 #6</p>
-<p><img src="http://image.changzhen0212.cn/img/202201111010459.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440713.png"></p>
 <p>00 00 是属性表个数 这里为0表示后面是没有属性表集合</p>
 <p>所以字段的全描述符是</p>
 <p><code>ACC_PRIVATE Ljava/lang/String; userName</code></p>
 <h2 id="方法表"><a href="#方法表" class="headerlink" title="方法表"></a>方法表</h2><p>紧接着是方法表部分。00 03 表示有3个方法。</p>
 <p>使用jclasslib查看验证</p>
-<p><img src="http://image.changzhen0212.cn/img/202201111017546.png"></p>
-<h3 id="方法表结构"><a href="#方法表结构" class="headerlink" title="方法表结构"></a>方法表结构</h3><p><img src="http://image.changzhen0212.cn/img/202201111013178.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440767.png"></p>
+<h3 id="方法表结构"><a href="#方法表结构" class="headerlink" title="方法表结构"></a>方法表结构</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440628.png"></p>
 <p>第一个方法的前8个字节</p>
 <p>00 01 00 07 00 08 00 01</p>
 <p>00 01 表示方法的权限修饰符是 <code>ACC_PUBLIC</code></p>
 <p>00 07 表示方法名称，指向常量池#7 <code>#7 = Utf8  &lt;init&gt;</code>,<code>&lt;init&gt;</code>表示<strong>构造方法</strong></p>
 <p>00 08 表示字段描述符索引，指向常量池#8 <code>#8 = Utf8  ()V</code>,表示<strong>无参无返回值</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111029311.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440936.png"></p>
 <p>00 01表示有一个方法属性的个数</p>
 <h4 id="方法表中的属性表attribute-info"><a href="#方法表中的属性表attribute-info" class="headerlink" title="方法表中的属性表attribute_info"></a>方法表中的属性表attribute_info</h4><p><strong>结构</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111031746.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440984.png"></p>
 <p>紧挨着之后的6个字节 00 09 00 00 00 2F</p>
 <p>00 09 表示属性名称索引，指向常量池#9 <code> #9 = Utf8  Code</code>,<strong>表示是Code属性</strong></p>
 <p>00 00 00 2F 是属性长度，2F=十进制47，表示占据47个字节作为code的值，后续47个字节是Code属性占用的字节，<strong>这47个字节从Code属性表中第三个开始也就是<code>max_stack</code>开始</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111044619.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440804.png"></p>
 <p>00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 02 00 0A 00 00 00 06</p>
 <p>00 01 00 00 00 04 00 0B 00 00 00 0C 00 01 00 00 00 05 00 0C 00 0D 00 00</p>
 <p><strong>Code属性表的结构</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111049530.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440269.png"></p>
 <p><strong>00 01</strong> 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 02 00 0A 00 00 00 06</p>
 <p>00 01 00 00 00 04 00 0B 00 00 00 0C 00 01 00 00 00 05 00 0C 00 0D 00 00</p>
 <p>00 01: <code>max_stack</code> 表示最大操作数栈深度为1</p>
@@ -2229,11 +2229,11 @@
 <p>00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 <strong>00 02</strong> 00 0A 00 00 00 06</p>
 <p>00 01 00 00 00 04 00 0B 00 00 00 0C 00 01 00 00 00 05 00 0C 00 0D 00 00</p>
 <p>00 02：<code>Code_attribute</code>，表示结构中属性表的个数为2个</p>
-<p><img src="http://image.changzhen0212.cn/img/202201111116533.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440556.png"></p>
 <hr>
 <p><strong>LineNumberTable属性结构</strong></p>
 <p>所以接下来8个字节是LineNumberTable表</p>
-<p><img src="http://image.changzhen0212.cn/img/202201111118374.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440259.png"></p>
 <p>00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 02 <strong>00 0A</strong> 00 00 00 06</p>
 <p>00 01 00 00 00 04 00 0B 00 00 00 0C 00 01 00 00 00 05 00 0C 00 0D 00 00</p>
 <p>00 0A：属性名称的索引，指向常量池中#10,<code>#10 = Utf8        LineNumberTable</code></p>
@@ -2248,11 +2248,11 @@
 <li>00 01： 表示的是有1对指令码和源码映射关系</li>
 <li>00 00 00 04：表示第一个指令映射的是源码中第4行代码，也就是构造方法</li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201111124241.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440340.png"></p>
 <hr>
 <p>后面紧挨着的是LocalVariableTable</p>
 <p><strong>LocalVariableTable属性结构</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111127196.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440855.png"></p>
 <p>00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 02 00 0A 00 00 00 06</p>
 <p>00 01 00 00 00 04 <strong>00 0B</strong> 00 00 00 0C 00 01 00 00 00 05 00 0C 00 0D 00 00</p>
 <p>00 0B：本地变量表的名称索引，指向常量池#11 <code>#11 = Utf8        LocalVariableTable</code></p>
@@ -2267,7 +2267,7 @@
 <hr>
 <p>然后紧跟着是local_variable_info项目结构</p>
 <p><strong>local_variable_info项目结构</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201111132857.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440690.png"></p>
 <p>00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 02 00 0A 00 00 00 06</p>
 <p>00 01 00 00 00 04 00 0B 00 00 00 0C 00 01 <strong>00 00 00 05</strong> 00 0C 00 0D 00 00</p>
 <p>00 00：<code>start_pc</code>，局部变量的生命周期开始的字节码偏移量=0</p>
@@ -2289,12 +2289,12 @@
 <h2 id="class文件的属性"><a href="#class文件的属性" class="headerlink" title="class文件的属性"></a>class文件的属性</h2><p>最后10个字节 00 01 00 12 00 00 00 02 00 13</p>
 <p>00 01：<code>attribute_count</code>,表示class文件只有1个属性</p>
 <p>SourceFile属性用于记录生成这个Class文件的源码文件名称</p>
-<h3 id="SourceFile属性结构"><a href="#SourceFile属性结构" class="headerlink" title="SourceFile属性结构"></a>SourceFile属性结构</h3><p><img src="http://image.changzhen0212.cn/img/202201111309642.png"></p>
+<h3 id="SourceFile属性结构"><a href="#SourceFile属性结构" class="headerlink" title="SourceFile属性结构"></a>SourceFile属性结构</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440909.png"></p>
 <p>00 12: 属性名索引，指向常量池#18, <code>#18 = Utf8    SourceFile</code></p>
 <p>00 00 00 02：属性长度，表示属性接下来的长度为2。</p>
 <p>00 13：源文件索引，指向常量池#19，<code> #19 = Utf8    ByteCodeDemo.java</code></p>
 <p>至此class字节码文件分析结束。</p>
-<h2 id="class文件整体结构图"><a href="#class文件整体结构图" class="headerlink" title="class文件整体结构图"></a>class文件整体结构图</h2><p><img src="http://image.changzhen0212.cn/img/202201111439872.png"></p>
+<h2 id="class文件整体结构图"><a href="#class文件整体结构图" class="headerlink" title="class文件整体结构图"></a>class文件整体结构图</h2><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291440104.png"></p>
 
       
     </div>
@@ -2345,7 +2345,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:12:11" itemprop="dateModified" datetime="2022-03-27T23:12:11+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:38:58" itemprop="dateModified" datetime="2022-03-29T14:38:58+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -2387,7 +2387,7 @@
 <li>设置对象头</li>
 <li>执行<code>&lt;init&gt;</code>方法</li>
 </ol>
-<p><img src="http://image.changzhen0212.cn/img/202201091613955.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291437619.png"></p>
 <h3 id="分配内存方法"><a href="#分配内存方法" class="headerlink" title="分配内存方法"></a>分配内存方法</h3><ul>
 <li>指针碰撞：内存空间分配是规则的，有一个已使用和未使用的临界指针，正常情况下是，把指针往后挪一定的空间，空出来的位置存放对象，这个叫做<strong>指针碰撞</strong></li>
 <li>空闲列表：内存分配不规则，已被使用的内存和空闲的内存相互交错在一起，虚拟机维护一个列表，记录可用的内存空间，在分配的时候从列表中找到一块足够大的空间划分给对象实例，并更新列表上的记录，叫做<strong>空闲列表</strong></li>
@@ -2399,18 +2399,18 @@
 </ul>
 <h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>将分配到的内存空间（不包括对象头）都初始化为零值，如果使用了TLAB的话，这一项工作也可以提前至TLAB分配时顺便进行。这步操作保证了对象的实例字段在Java代码中可以不赋初始值就直接使用，使程序能访问到这些字段的数据类型所对应的零值。</p>
 <h3 id="设置对象头"><a href="#设置对象头" class="headerlink" title="设置对象头"></a>设置对象头</h3><p>Hotspot虚拟机中，对象在内存中存储布局可以分三块区域：对象头、实例数据、对齐填充</p>
-<p><img src="http://image.changzhen0212.cn/img/202201082223222.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438106.png"></p>
 <p>对象头Object Header主要包含：</p>
 <ol>
 <li>Mark Word标记字段，32位虚拟机占4个字节，64位虚拟机占8个字节</li>
 <li>Klass Point类型指针，开启指针压缩栈4字节，关闭指针压缩占8字节</li>
 <li>数组长度，4个字节，只有数组对象才有</li>
 </ol>
-<p><img src="http://image.changzhen0212.cn/img/202201091622057.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438545.png"></p>
 <h4 id="Mark-Word-标记字段"><a href="#Mark-Word-标记字段" class="headerlink" title="Mark Word 标记字段"></a>Mark Word 标记字段</h4><p><strong>32位MarkWord</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201082226093.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438632.png"></p>
 <p><strong>64位MarkWord</strong></p>
-<p><img src="http://image.changzhen0212.cn/img/202201082228773.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438589.png"></p>
 <h4 id="Klass-Pointer-类型指针"><a href="#Klass-Pointer-类型指针" class="headerlink" title="Klass Pointer 类型指针"></a>Klass Pointer 类型指针</h4><p>类的元数据指针，一个new出来的对象放在堆里，对象头中的klass指针指向的是方法区中类的类元数据信息。</p>
 <p>一个<code>.class</code>文件，加载到方法区的是类的<code>类元信息</code>，类的对象信息存在堆中，获取类的数据时，访问的是堆中的对象信息，JVM内部调用C++实现的类型指针访问方法区中的<code>.class</code>。</p>
 <p>一句话总结：堆中的对象是方法区中类元信息的入口。</p>
@@ -2510,8 +2510,8 @@
 </ol>
 </li>
 </ul>
-<h2 id="对象的整体内存布局"><a href="#对象的整体内存布局" class="headerlink" title="对象的整体内存布局"></a>对象的整体内存布局</h2><p><img src="http://image.changzhen0212.cn/img/202201091623723.png"></p>
-<p><img src="http://image.changzhen0212.cn/img/202201091630230.png"></p>
+<h2 id="对象的整体内存布局"><a href="#对象的整体内存布局" class="headerlink" title="对象的整体内存布局"></a>对象的整体内存布局</h2><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438162.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291438153.png"></p>
 
       
     </div>
@@ -2562,7 +2562,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:11:15" itemprop="dateModified" datetime="2022-03-27T23:11:15+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:37:52" itemprop="dateModified" datetime="2022-03-29T14:37:52+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -2599,7 +2599,7 @@
 <p>一个字节码文件，通过类装载子系统，丢到运行时数据区，最后通过字节码执行引擎来执行内存区中的代码。</p>
 <h2 id="运行时数据区"><a href="#运行时数据区" class="headerlink" title="运行时数据区"></a>运行时数据区</h2><p>JVM运行时数据区主要分为：堆、栈、方法区(元空间)、本地方法栈、程序计数器。</p>
 <p>其中，堆、方法区是所有线程共享。栈、本地方法栈、程序计数器是每个线程独有的。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201072027762.png" alt=" "></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291437211.png" alt=" "></p>
 <h2 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h2><p>官方叫做<strong>虚拟机栈</strong>，线程私有，生命周期与线程相同，所以也可以叫做线程栈。栈描述的是Java方法执行的线程内存模型。</p>
 <h3 id="栈帧"><a href="#栈帧" class="headerlink" title="栈帧"></a>栈帧</h3><p>虚拟机进行方法调用和方法执行背后的数据结构，存放局部变量表、操作数栈、动态连接、方法出口等信息。</p>
 <p>一句话总结：<strong>一个方法，对应着一块栈帧</strong></p>
@@ -2628,7 +2628,7 @@
 <p>通常new一个对象是放到堆里面（也可能通过逃逸分析在栈中分配，暂不考虑。）;<code>new Math();</code></p>
 <p>现在Math math 局部变量表中有一个math。</p>
 <p>此时堆里的math和局部变量表里的math的关系，局部变量表里的math是一块空的内存空间，并不是真正的math，存放的是堆中的math的内存地址，就是指针。</p>
-<p><img src="http://image.changzhen0212.cn/img/202201081553374.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291437315.png"></p>
 <h3 id="栈的内存分配"><a href="#栈的内存分配" class="headerlink" title="栈的内存分配"></a>栈的内存分配</h3><p>是给一个线程分配的,512K或者1M就可以, <code>-Xss</code>设置的越小，count值就越小，说明一个线程栈可以分配的栈帧就越少，但是对于JVM整体来说，能开启的线程数会更多。</p>
 <h2 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h2><p>同样是每一个线程独有的，每个线程都有的一块内存空间，用于记录即将执行的代码的内存地址，或者叫做行号。</p>
 <p>每执行完一行代码，<strong>字节码执行引擎</strong>会马上动态地修改程序计数器的值。</p>
@@ -2656,7 +2656,7 @@
 <li>强分代假说（Strong Generational Hypothesis）：熬过越多次垃圾收集过程的对象就越难以消亡。</li>
 </ol>
 <p>基于以上两种分代假说，将堆内存分为新生代、老年代。新生代中又分为Eden区、Survivor区，Survivor区又分为From Survivor区、To survivor区</p>
-<p><img src="http://image.changzhen0212.cn/img/202201081542827.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291437659.png"></p>
 <p>默认情况下分配比例，比例都是可配置的</p>
 <ul>
 <li>年轻代和老年代的比例为1:2，新生代为1/3，老年代为2/3</li>
@@ -2741,7 +2741,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-28 00:27:27" itemprop="dateModified" datetime="2022-03-28T00:27:27+08:00">2022-03-28</time>
+                <time title="修改时间：2022-03-29 14:56:04" itemprop="dateModified" datetime="2022-03-29T14:56:04+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -2776,7 +2776,7 @@
 <li>加载完成字节码文件后，调用main方法，最终会调用到c的Main方法，执行代码</li>
 <li>销毁jvm</li>
 </ol>
-<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203280016071.png"></p>
+<p><img src="/images/jvm/202203280016071.png"></p>
 <h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><p>其中，<code>launcher.loadClass()</code>类加载过程，可以细分为：</p>
 <p>加载-&gt;验证-&gt;准备-&gt;解析-&gt;初始化-&gt;使用-&gt;卸载</p>
 <ol>

@@ -27,15 +27,15 @@
 <meta property="og:site_name" content="ChangZhen&#39;s Blog">
 <meta property="og:description" content="ZGC收集器是一款基于Region内存布局的，（暂时）不设分代的，使用了读屏障、染色指针和内存多重映射等技术来实现可并发的标记-整理算法的，以低延迟为首要目标的一款垃圾收集器。 ZGC内存布局ZGC的Region具有动态性——动态创建和销毁，以及动态的区域容量大小。 ZGC的Region可以具有大、中、小三类容量。  小型Region（Small Region）：容量固定为2MB，用于放置小于25">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201151648941.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201151724831.png">
-<meta property="og:image" content="http://image.changzhen0212.cn/img/202201161155666.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442492.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442162.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442780.png">
 <meta property="article:published_time" content="2022-01-15T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-03-27T15:14:47.568Z">
+<meta property="article:modified_time" content="2022-03-29T06:43:03.402Z">
 <meta property="article:author" content="ChangZhen">
 <meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image.changzhen0212.cn/img/202201151648941.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442492.png">
 
 <link rel="canonical" href="http://changzhen0212.github.io/2022/01/16/JVM/JVM-07-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B9%8BZGC/">
 
@@ -195,7 +195,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-27 23:14:47" itemprop="dateModified" datetime="2022-03-27T23:14:47+08:00">2022-03-27</time>
+                <time title="修改时间：2022-03-29 14:43:03" itemprop="dateModified" datetime="2022-03-29T14:43:03+08:00">2022-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -230,7 +230,7 @@
 <li>中型Region（Medium Region）：容量固定为32MB，用于放置大于等于256KB但小于4MB的对象。</li>
 <li>大型Region（Large Region）：容量不固定，可以动态变化，但必须为2MB的整数倍，用于放置4MB或以上的大对象。每个大型Region中只会存放一个大对象，这也预示着虽然名字叫作「大型Region」，但它的实际容量完全有可能小于中型Region，最小容量可低至4MB。大型Region在ZGC的实现中是不会被重分配（重分配是ZGC的一种处理动作，用于复制对象的收集器阶段）的，因为复制一个大对象的代价非常高昂。</li>
 </ul>
-<p><img src="http://image.changzhen0212.cn/img/202201151648941.png"></p>
+<p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442492.png"></p>
 <h3 id="ZGC并发-整理算法的实现"><a href="#ZGC并发-整理算法的实现" class="headerlink" title="ZGC并发-整理算法的实现"></a>ZGC并发-整理算法的实现</h3><p>ZGC收集器采用了<strong>染色指针</strong>技术。染色指针是一种直接<strong>将少量额外的信息存储在指针上</strong>的技术。</p>
 <h4 id="硬件和操作系统小知识"><a href="#硬件和操作系统小知识" class="headerlink" title="硬件和操作系统小知识"></a>硬件和操作系统小知识</h4><p>在64位系统中，理论可以访问的内存高达<code>2的64次幂</code>字节，实际上，在AMD64架构中只支持到52位（4PB）的地址总线和48位（256TB）的虚拟地址空间，所以目前64位的硬件实际能够支持的最大内存只有256TB。操作系统也会施加自己的约束，64位的Linux则分别支持47位（128TB）的进程虚拟地址空间和46位（64TB）的物理地址空间，64位的Windows系统只支持44位（16TB）的物理地址空间。</p>
 <h4 id="染色指针"><a href="#染色指针" class="headerlink" title="染色指针"></a>染色指针</h4><p>每个对象有一个64位指针，这64位被分为：</p>
@@ -240,7 +240,7 @@
 <li>1位：Remapped标识，设置此位的值后，对象未指向relocation set中（relocation set表示需要GC的Region集合）；</li>
 <li>1位：Marked1标识；</li>
 <li>1位：Marked0标识，和上面的Marked1都是标记对象用于辅助GC；</li>
-<li>42位：对象的地址（所以它可以支持2^42=4T内存）<br><img src="http://image.changzhen0212.cn/img/202201151724831.png"></li>
+<li>42位：对象的地址（所以它可以支持2^42=4T内存）<br><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442162.png"></li>
 </ul>
 <h4 id="为什么有2个mark标记？"><a href="#为什么有2个mark标记？" class="headerlink" title="为什么有2个mark标记？"></a>为什么有2个mark标记？</h4><p>每一个GC周期开始时，会交换使用的标记位，使上次GC周期中修正的已标记状态失效，所有引用都变成未标记。</p>
 <ul>
@@ -253,7 +253,7 @@
 <li>染色指针可以大幅减少在垃圾收集过程中内存屏障的使用数量，ZGC只使用了读屏障。</li>
 <li>颜色指针具备强大的扩展性，它可以作为一种可扩展的存储结构用来记录更多与对象标记、重定位过程相关的数据，以便日后进一步提高性能。</li>
 </ol>
-<h3 id="ZGC的运作过程"><a href="#ZGC的运作过程" class="headerlink" title="ZGC的运作过程"></a>ZGC的运作过程</h3><p><img src="http://image.changzhen0212.cn/img/202201161155666.png"></p>
+<h3 id="ZGC的运作过程"><a href="#ZGC的运作过程" class="headerlink" title="ZGC的运作过程"></a>ZGC的运作过程</h3><p><img src="https://raw.githubusercontent.com/changzhen0212/picGo/master/blog/202203291442780.png"></p>
 <p>分为四个大的阶段。四个阶段都是并发执行的，仅是两个阶段中间会存在短暂的停顿小阶段</p>
 <ul>
 <li><p><strong>并发标记（Concurrent Mark）</strong>：与G1一样，并发标记是遍历对象图做可达性分析的阶段，它的初始标记(<strong>Mark Start</strong>)和最终标记(<strong>Mark End</strong>)也会STW，与G1不同的是，ZGC的标记是在指针上而不是在对象上进行的，标记阶段会更新<strong>染色指针</strong>中的Marked 0、 Marked 1标志位。</p>
