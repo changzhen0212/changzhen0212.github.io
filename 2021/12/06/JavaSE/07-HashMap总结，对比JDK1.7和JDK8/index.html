@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"changzhen0212.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="HashMap基础属性JDK1.7的HashMap由数组+链表组成 JDK8的HashMap由数组+链表+红黑树组成 相同部分都是指定了一些初始化值和一些成员变量 1234567891011121314151617181920212223&#x2F;&#x2F; 默认初始容量 - 必须是 2 的幂。static final int DEFAULT_INITIAL_CAPACITY &#x3D; 1 &lt;&lt; 4; &#x2F;&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap总结">
+<meta property="og:url" content="http://changzhen0212.github.io/2021/12/06/JavaSE/07-HashMap%E6%80%BB%E7%BB%93%EF%BC%8C%E5%AF%B9%E6%AF%94JDK1.7%E5%92%8CJDK8/index.html">
+<meta property="og:site_name" content="ChangZhen&#39;s Blog">
+<meta property="og:description" content="HashMap基础属性JDK1.7的HashMap由数组+链表组成 JDK8的HashMap由数组+链表+红黑树组成 相同部分都是指定了一些初始化值和一些成员变量 1234567891011121314151617181920212223&#x2F;&#x2F; 默认初始容量 - 必须是 2 的幂。static final int DEFAULT_INITIAL_CAPACITY &#x3D; 1 &lt;&lt; 4; &#x2F;&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-12-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-29T06:25:46.415Z">
+<meta property="article:author" content="ChangZhen">
+<meta property="article:tag" content="Java容器">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://changzhen0212.github.io/2021/12/06/JavaSE/07-HashMap%E6%80%BB%E7%BB%93%EF%BC%8C%E5%AF%B9%E6%AF%94JDK1.7%E5%92%8CJDK8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HashMap总结 | ChangZhen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ChangZhen's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://changzhen0212.github.io/2021/12/06/JavaSE/07-HashMap%E6%80%BB%E7%BB%93%EF%BC%8C%E5%AF%B9%E6%AF%94JDK1.7%E5%92%8CJDK8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head_icon.jpg">
+      <meta itemprop="name" content="ChangZhen">
+      <meta itemprop="description" content="不忘初心，方得始终">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ChangZhen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HashMap总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-12-06 00:00:00" itemprop="dateCreated datePublished" datetime="2021-12-06T00:00:00+08:00">2021-12-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-03-29 14:25:46" itemprop="dateModified" datetime="2022-03-29T14:25:46+08:00">2022-03-29</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/" itemprop="url" rel="index"><span itemprop="name">Java技术栈</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E6%8A%80%E6%9C%AF%E6%A0%88/Java%E5%AE%B9%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">Java容器</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h1><h2 id="基础属性"><a href="#基础属性" class="headerlink" title="基础属性"></a>基础属性</h2><p>JDK1.7的HashMap由数组+链表组成</p>
+<p>JDK8的HashMap由数组+链表+红黑树组成</p>
+<p>相同部分都是指定了一些初始化值和一些成员变量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 默认初始容量 - 必须是 2 的幂。</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">4</span>; <span class="comment">// aka 16</span></span><br><span class="line"><span class="comment">// 最大容量，在两个带参数的构造函数中的任何一个隐式指定更高的值时使用。 必须是 2 的幂 &lt;= 1&lt;&lt;30。</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAXIMUM_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">30</span>;</span><br><span class="line"><span class="comment">// 默认加载因子</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">float</span> DEFAULT_LOAD_FACTOR = <span class="number">0.75f</span>;</span><br><span class="line"><span class="comment">// 链表转为红黑树的阈值</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TREEIFY_THRESHOLD = <span class="number">8</span>;</span><br><span class="line"><span class="comment">// 红黑树退化为链表的阈值</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> UNTREEIFY_THRESHOLD = <span class="number">6</span>;</span><br><span class="line"><span class="comment">// 转红黑树的table数组的长度</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_TREEIFY_CAPACITY = <span class="number">64</span>;</span><br><span class="line"><span class="comment">// HashMap真正存放数据的table 1.7为Entry[]</span></span><br><span class="line"><span class="keyword">transient</span> Node&lt;K,V&gt;[] table;</span><br><span class="line"><span class="keyword">transient</span> Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet;</span><br><span class="line"><span class="comment">// 全部的键值对数量</span></span><br><span class="line"><span class="keyword">transient</span> <span class="keyword">int</span> size;</span><br><span class="line"><span class="comment">// 快速失败</span></span><br><span class="line"><span class="keyword">transient</span> <span class="keyword">int</span> modCount;</span><br><span class="line"><span class="comment">// 下一次扩容的阈值</span></span><br><span class="line"><span class="keyword">int</span> threshold;</span><br><span class="line"><span class="comment">// 加载因子</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">float</span> loadFactor;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="构造器"><a href="#构造器" class="headerlink" title="构造器"></a>构造器</h2><p>无参的构造器也是调用了有参的构造器，将<code>initialCapacity</code>, <code>loadFactor</code> 数组长度和加载因子赋值。真正的初始化HashMap都是在resize方法中进行</p>
+<h2 id="put方法"><a href="#put方法" class="headerlink" title="put方法"></a>put方法</h2><h3 id="1-7"><a href="#1-7" class="headerlink" title="1.7"></a>1.7</h3><ol>
+<li>如果数组为空，创建一个指定容量的Entry[]数组，并修改下次扩容阈值大小</li>
+<li>判断key是否为空，如果为空则把value存到table[0]的位置</li>
+<li>计算key的hash值，然后根据<code>hash &amp; (table.length -1)</code> 计算数组下标 <ol>
+<li>当table[i]为空时候，直接调用addEntry方法，addEntry中，根据hash值，key，value构造出一个Entry，并传入一个Entry对象，用新的Entry.next指向这个传入的Entry。当然第一次插入时这个entry对象为空。同时<code>size++</code></li>
+<li>当table[i]不为空时候，for循环遍历当前链表，判断新put的key是否存在于这个链表中，如果存在则覆盖。不存在则走addEntry逻辑。此时在构造新的Entry对象时传入的entry对象是table[i]当前的头节点。addEntry的操作是把table[i]的头节点直接指向新的Entry对象，然后新的Entry.next指向原来的头节点，同时<code>size++</code>。此时就是头插法。</li>
+<li>同时addEntry()方法中判断如果<code>size &gt;= threshold) &amp;&amp; (null != table[bucketIndex])</code>，如果当前<code>size</code>超出了<code>threshold</code>，而且当前table[i]的位置不为空，就进行扩容。</li>
+</ol>
+</li>
+</ol>
+<h3 id="JDK8"><a href="#JDK8" class="headerlink" title="JDK8"></a>JDK8</h3><p>先对key做哈希，然后调用putVal()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> putVal(hash(key), key, value, <span class="keyword">false</span>, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">hash – 密钥的散列</span></span><br><span class="line"><span class="comment">key——钥匙</span></span><br><span class="line"><span class="comment">value – 要放置的值</span></span><br><span class="line"><span class="comment">onlyIfAbsent – 如果为真，则不更改现有值</span></span><br><span class="line"><span class="comment">evict – 如果为 false，则表处于创建模式。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> V <span class="title">putVal</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">boolean</span> onlyIfAbsent,<span class="keyword">boolean</span> evict)</span></span></span><br></pre></td></tr></table></figure>
+
+
+<ol>
+<li>如果当前数组为空则调用resize，在resize方法中初始化数组长度和加载因子，初始化新的Node[]数组赋值给table</li>
+<li>如果当前数组不为空，如果当前table[i]为空，则直接new一个新的Node放入</li>
+<li>如果table[i]不为空 <ol>
+<li>判断当前key是否重复，如果节点p的hash值和当前put进来的hash值相等且key和put进来的key相等，把p赋值给e</li>
+<li>如果p是链表，遍历链表 <ol>
+<li>如果next节点为空，则new一个新的节点，p的next指向新节点（尾插法）</li>
+<li>判断当前链表长度是否大于（8-1），进行树化（树化的方法里还要判断当前数组长度是否小于64，如果小于则进行扩容不树化）</li>
+<li>如果key相同，则覆盖</li>
+</ol>
+</li>
+<li>如果p是红黑树，进入<code>putTreeVal</code> 将元素插入到红黑树中，并判断是否重复</li>
+</ol>
+</li>
+<li>执行++size并判断是否大于扩容阈值，如果大于阈值则调用resize()方法进行扩容</li>
+</ol>
+<h3 id="树化操作"><a href="#树化操作" class="headerlink" title="树化操作"></a>树化操作</h3><p><code>treeifyBin(Node&lt;K,V&gt;[] tab, int hash)</code></p>
+<ol>
+<li>先判断当前table不为null，判断当前table[].length是否小于64，如果小于64进行扩容不做树化</li>
+<li>table.length&gt;64，do while遍历链表，将每个节点构造成TreeNode，维护成双向链表</li>
+<li>将table[i]指向双向链表的头节点，开始进行真正的树化</li>
+</ol>
+<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><h3 id="JDK1-7-resize-int-newCapacity"><a href="#JDK1-7-resize-int-newCapacity" class="headerlink" title="JDK1.7 resize(int newCapacity)"></a>JDK1.7 <code>resize(int newCapacity)</code></h3><ol>
+<li> 传入参数为原来数组长度2倍的<code>newCapacity</code> </li>
+<li> 先判断当前数组长度是否达到最大值，如果达到最大值直接返回 </li>
+<li> 新建一个长度为newCapacity的数组，遍历老数组上的每一个节点，与新数组的length-1做哈希计算下标位置，使用头插法插入 </li>
+<li> rehash通常不考虑，需要根据扩容的长度重新计算哈希种子，第一次修改的条件是capacity&gt;=Integer.max或者环境变量里设置的一个值 </li>
+</ol>
+<h3 id="JDK8-resize"><a href="#JDK8-resize" class="headerlink" title="JDK8 resize()"></a>JDK8 <code>resize()</code></h3><ol>
+<li> 先计算新的数组长度和扩容阈值 </li>
+<li> 获取旧的数组长度（如果为空也为0）、初始化旧的扩容阈值等于全局变量扩容阈值，初始化新的数组长度和新的扩容阈值为0 </li>
+<li> 如果旧数组长度&gt;0       1. 如果旧数组长度大于最大值，扩容阈值赋值为Intger.max_value，直接返回旧数组      1. 将新数组长度赋值为，旧数组长度左移1位（即2倍），然后判断新数组长度小于数组长度最大值，且旧的扩容阈值大于数组默认长度16，把新的扩容阈值左移1位</li>
+<li> 如果旧的扩容阈值&gt;0，将新数组长度赋值为旧的扩容阈值 </li>
+<li> 如果旧的数组长度为null或0，且旧的扩容阈值为0，此时是初始化。将新的数组长度赋值为默认16，新的扩容阈值赋值为默认加载因子_初始化容量(0.75 _ 16) </li>
+<li> 如果新的扩容阈值=0，计算新的扩容阈值，并赋值给全局变量扩容阈值 </li>
+<li> 根据前一步计算的结果创建新的数组，赋值给全局变量table </li>
+<li>遍历老数组每个元素，将oldTab[j]赋值给e，如果old[i]不为空 <ol>
+<li>如果e.next为空，说明没有下一个节点了，直接转移</li>
+<li>如果e.next不为空，判断是红黑树还是链表 <ol>
+<li>如果是链表，将旧的链表的hash&amp;旧数组长度 只有0和非0两个结果， 维护成两个高低位链表，低位链表赋值给新的数组原位置，高位链表赋值给新的数组新位置，[旧链表位置+旧数组长度]。是将指针指向链表的头节点。</li>
+<li>如果是红黑树，进入<code>split(this, newTab, j, oldCap)</code> <ol>
+<li>根据红黑树维护的隐藏双向链表，同样维护成高低位两个链表</li>
+<li>如果低位链表头部不为null <ol>
+<li>如果长度小于6则退化为链表，</li>
+<li>否则把table[i]指向低位链表头部，此时如果高位链表头部不为null，直接移动红黑树，树结构不变</li>
+</ol>
+</li>
+<li>高位链表如果头部不为null，则跟低位链表相同操作</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="get方法"><a href="#get方法" class="headerlink" title="get方法"></a>get方法</h2><h3 id="JDK1-7"><a href="#JDK1-7" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><ol>
+<li>先判断key是否为null，如果为null 进入<code>getForNullKey()</code> 直接遍历table[0]的元素，找到匹配的key=null的节点，如果没有则返回null</li>
+<li>如果key不为null，进入<code>getEntry(Object key)</code>，根据key的hash值和table.length -1 与操作计算出数组下标，定位到table[i]，遍历链表，找到匹配的key则返回，否则返回null</li>
+<li>判断返回的entry是否为null，返回null或者entry.getValue</li>
+</ol>
+<h3 id="JDK8-1"><a href="#JDK8-1" class="headerlink" title="JDK8"></a>JDK8</h3><ol>
+<li>根据key的hash值确认在数组中的位置</li>
+<li>判断头节点的key是否eq get传入的key，如果相等则直接返回</li>
+<li>如果不相等，判断e.next不为null，然后判断first头节点是空黑树还是链表 <ol>
+<li>如果的链表，遍历链表，找到匹配的key对应的节点返回</li>
+<li>如果是红黑树<code>getTreeNode(hash, key)</code></li>
+</ol>
+</li>
+</ol>
+<p>如果一个HashMap仅仅做了初始化，没有经历过put操作，此时内部table为null，此时调用get(key)方法，会直接在判断table为null时直接返回null</p>
+<h1 id="ConcurrentHashMap"><a href="#ConcurrentHashMap" class="headerlink" title="ConcurrentHashMap"></a>ConcurrentHashMap</h1><h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="JDK1-7-1"><a href="#JDK1-7-1" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><pre><code>数组+链表，每个数组元素里有个小的segment数组，可以理解为每个segment是一个小的HashMap。
+
+
+使用Unsafe#CAS操作加上ReentrantLock锁保证并发安全
+</code></pre>
+<h3 id="JDK8-2"><a href="#JDK8-2" class="headerlink" title="JDK8"></a>JDK8</h3><pre><code>数组+链表+红黑树。如果转为红黑树，每个数组元素下是一个TreeBin对象，一个TreeBin对象维护了一棵红黑树
+
+
+使用Unsafe#CAS操作加上synchronize锁保证并发安全
+</code></pre>
+<h2 id="基础属性-1"><a href="#基础属性-1" class="headerlink" title="基础属性"></a>基础属性</h2><h3 id="JDK1-7-2"><a href="#JDK1-7-2" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 默认初始化容量，同hashMap</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="number">16</span>;</span><br><span class="line"><span class="comment">// 默认加载因子，同hashMap</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">float</span> DEFAULT_LOAD_FACTOR = <span class="number">0.75f</span>;</span><br><span class="line"><span class="comment">// 默认并发级别，是segment的个数</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_CONCURRENCY_LEVEL = <span class="number">16</span>;</span><br><span class="line"><span class="comment">// 最多可以有2^16个segment</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAX_SEGMENTS = <span class="number">1</span> &lt;&lt; <span class="number">16</span>; <span class="comment">// slightly conservative</span></span><br><span class="line"><span class="comment">// 每段表的最小容量。 必须是 2 的幂，至少是 2 以避免在延迟构造后立即调整大小。</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_SEGMENT_TABLE_CAPACITY = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>每个Segment中存放的是HashEntry对象，每个Segment中HashEntry对象的个数是通过 <code>capacity</code>/<code>ssize</code>计算出来的，默认是两个。</p>
+<p>ssize的计算方法在初始化方法中。</p>
+<h3 id="JDK8-3"><a href="#JDK8-3" class="headerlink" title="JDK8"></a>JDK8</h3><p>新增了HashMap中的树化和退化为链表的阈值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TREEIFY_THRESHOLD = <span class="number">8</span>;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> UNTREEIFY_THRESHOLD = <span class="number">6</span>;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_TREEIFY_CAPACITY = <span class="number">64</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 几个hashCode</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MOVED     = -<span class="number">1</span>; <span class="comment">// hash for forwarding nodes</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TREEBIN   = -<span class="number">2</span>; <span class="comment">// hash for roots of trees</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> RESERVED  = -<span class="number">3</span>; <span class="comment">// hash for transient reservations</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> HASH_BITS = <span class="number">0x7fffffff</span>; <span class="comment">// usable bits of normal node hash</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">transient</span> <span class="keyword">volatile</span> Node&lt;K,V&gt;[] table;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 下一个要使用的表； 仅在扩容时非空</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> Node&lt;K,V&gt;[] nextTable;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// 基本计数器值，主要在没有争用时使用，但也用作表初始化竞争期间的后备。 通过 CAS 更新。</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">long</span> baseCount;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 表初始化和调整大小控制。 如果为负，则表正在初始化或调整大小：-1 表示初始化，否则 -（1 + 活动调整大小线程的数量）。 否则，当 table 为空时，保存创建时使用的初始表大小，或默认为 0。 初始化后，保存下一个要调整表格大小的元素计数值。</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> sizeCtl;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// 调整大小时要拆分的下一个表索引（加一）</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> transferIndex;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调整大小和/或创建 CounterCell 时使用的自旋锁（通过 CAS 锁定）。</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> cellsBusy;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 计数器单元格表。 当非空时，大小是 2 的幂。</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> CounterCell[] counterCells;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><h3 id="JDK1-7-3"><a href="#JDK1-7-3" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><ol>
+<li> 先计算出segment内部<code>HashEntry[]</code>数组的大小 </li>
+<li> 初始化segment数组 </li>
+<li> 生成table[0]位置的segment对象  </li>
+</ol>
+<blockquote>
+<p>为什么要在初始化阶段生成segment对象？</p>
+<p>一个元素要put到concurrentHashMap中，是要放到segment中再转为HashEntry，如果segment为空，每次都要new一个segment数组，需要重新计算segmengt中要存放几个HashEntry。</p>
+<p>现在提前new出一个s0的对象，用原型模式的思想，每次都用这个对象操作，就不用重新计算了，提高了效率</p>
+</blockquote>
+<ol start="4">
+<li> 初始化的segment的HashEntry数量都是一致的，后续扩容实际操作的都是每个segment元素中的HashEntry[]数组，跟外面大的segment[]数组没关系了。最终每个segment中的HashEntry数量可能会不一样，但是segment[]长度不变 </li>
+</ol>
+<h3 id="JDK8-4"><a href="#JDK8-4" class="headerlink" title="JDK8"></a>JDK8</h3><p>跟HashMap一样，初始化只是指定了一些变量的初始值，包括初始长度，加载因子，concurrencyLevel。</p>
+<p>在第一次put操作时，会判断当前table是否为空，为空时候则进入<code>initTable()</code></p>
+<p>sizeCtl默认为0</p>
+<ol>
+<li>sizeCtl赋值给sc,判断是否小于0，初始化不走这一步<br> 如果有其他线程可能会走到这一步，此时第一个线程拿到了cas的加锁，但还没有完成创建数组。此时执行<code>Thread.yield();</code>让出cpu资源。这一步可能会让cpu飙升到100% </li>
+<li>cas操作sc-1 <ol>
+<li>加锁成功 <ul>
+<li> 判断数组是否为null，如果为null是其他线程创建完成了，直接返回。 </li>
+<li> 否则之后开始进行数组初始化，重新赋值并返回新的sizeCtl </li>
+</ul>
+</li>
+<li> 加锁失败则自旋进入步骤1 </li>
+</ol>
+</li>
+<li> 返回创建的table </li>
+</ol>
+<h2 id="put"><a href="#put" class="headerlink" title="put"></a>put</h2><h3 id="JDK1-7-4"><a href="#JDK1-7-4" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><ol>
+<li>先判断value不为空，</li>
+<li>对key进行hash，与操作segmentMask，得到结果j，j是外面大的table segment[]数组的下标。 <ol>
+<li>如果segment[j]为空，根据s0生成一个新的segment</li>
+</ol>
+</li>
+<li>调用segment的put方法</li>
+<li>segment#put <ol>
+<li>加锁，插入，跟HashMap逻辑类似，当segment中的hashEntry[]的count属性&gt;阈值时候进行扩容</li>
+</ol>
+</li>
+</ol>
+<h3 id="JDK8-5"><a href="#JDK8-5" class="headerlink" title="JDK8"></a>JDK8</h3><p>流程和HashMap一样，与HashMap不同的是TreeBin是整个红黑树，内部有TreeNode和红黑树实现</p>
+<ol>
+<li> 如果数组是空的，进行初始化<code>initTable()</code> </li>
+<li>根据key计算得到hash值，再计算出数组下标，初始化binCount=0,binCount为链表上节点个数 <ol>
+<li> 如果table[i]是空的，就生成一个Node放入 </li>
+<li>如果不为空 <ol>
+<li> 如果有两个线程同时put到table[i]，进行CAS自旋获取锁，成功了put，失败了就一直重试直到成功 </li>
+<li> 如果当前Node的hash值为<code>MOVED</code>，说明有其他线程正在进行扩容，进入helpTransfer()方法，帮助其他线程转移 </li>
+<li>加锁synchronize(f)，f为当前链表头节点，也就是table[i] <ol>
+<li>fh=f.hash, 如果大于0，说明是链表，操作链表，binCount赋值为1。遍历链表binCount++，找到相同的key覆盖并退出循环，否则插入到尾部，尾插法</li>
+<li>如果<code>f instanceof TreeBin</code>是红黑树，则操作红黑树的插入。TreeBin就维护了整个红黑树。</li>
+</ol>
+</li>
+<li> 如果binCount大于8，进入treeifyBin方法，进行树化 </li>
+<li> treeifyBin方法中还是要判断当前数组长度如果小于64，则进行扩容而不是树化 </li>
+<li><code>addCount(1L, binCount);</code>添加计数<br> 通过CounterCell[]帮助计数，判断counterCell不为空， <ol>
+<li> 看counterCell数组对应的位置是不是空的，如果不是空的，调用fullAddCount进行赋值，同时对value进行+1</li>
+<li> 如果是空的则cas抢锁，对value+1，</li>
+<li><code>fullAddCount(x, wasUncontended);</code> <ol>
+<li>wasUncontended可以理解为false才会进来</li>
+<li>通过collide控制流程，初始为false，如果都没有执行到，会变为true, 然后循环第二次，会进入它下面的代码</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="计数"><a href="#计数" class="headerlink" title="计数"></a>计数</h2><h3 id="JDK1-7-5"><a href="#JDK1-7-5" class="headerlink" title="JDK1.7"></a>JDK1.7</h3><pre><code>累加segment中的元素
+</code></pre>
+<h3 id="JDK8-6"><a href="#JDK8-6" class="headerlink" title="JDK8"></a>JDK8</h3><p><code>sumCount()</code></p>
+<p>通过baseCount + counterCells数组的方式对元素个数统计，使用sumCount()将数组元素累加起来，得到的就是整个concurrentHashMap存储元素的个数</p>
+<h2 id="扩容-1"><a href="#扩容-1" class="headerlink" title="扩容"></a>扩容</h2><h3 id="JDK8-7"><a href="#JDK8-7" class="headerlink" title="JDK8"></a>JDK8</h3><ol>
+<li>新建一个2倍的数组，转移元素从老数组 从后往前转移（从右往左），把新的输入赋值给nextTable属性</li>
+<li>扩容时创建的节点为<code>fwdNode</code>,继承自Node,HashCode=<code>MOVED</code></li>
+<li>计算<code>步长</code>，每次转移<code>步长</code>个table[]数组位置，单线程下与HashMap相同</li>
+<li>多线程扩容时，每个线程负责<code>步长</code>个元素的转移</li>
+<li>转移过程中会对当前table[]节点加锁，转移完成后解锁。保证其他线程put操作时，可以操作table[]的其他节点</li>
+<li>一个线程转移完自己的元素会去判断是否有其他区域可以帮助他们转移。 <ol>
+<li>如果有需要帮助的就去帮助转移</li>
+<li>如果没有需要帮助的，就退出循环然后等待扩容完成（可能有其他线程正在转移）</li>
+</ol>
+</li>
+<li>put的时候可能获取到新数组，也可能是fwdNode，此时帮助扩容</li>
+<li>扩容完把新的数组赋值给table，nextTable清空，线程继续之前的操作</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java%E5%AE%B9%E5%99%A8/" rel="tag"># Java容器</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/05/JavaSE/06-JDK8%E7%9A%84ConcurrentHashMap/" rel="prev" title="JDK8的ConcurrentHashMap">
+      <i class="fa fa-chevron-left"></i> JDK8的ConcurrentHashMap
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/JVM/JVM-01-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B/" rel="next" title="类加载过程">
+      类加载过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#HashMap"><span class="nav-number">1.</span> <span class="nav-text">HashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E5%B1%9E%E6%80%A7"><span class="nav-number">1.1.</span> <span class="nav-text">基础属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">构造器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#put%E6%96%B9%E6%B3%95"><span class="nav-number">1.3.</span> <span class="nav-text">put方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8"><span class="nav-number">1.3.2.</span> <span class="nav-text">JDK8</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%91%E5%8C%96%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.3.</span> <span class="nav-text">树化操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A9%E5%AE%B9"><span class="nav-number">1.4.</span> <span class="nav-text">扩容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-resize-int-newCapacity"><span class="nav-number">1.4.1.</span> <span class="nav-text">JDK1.7 resize(int newCapacity)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-resize"><span class="nav-number">1.4.2.</span> <span class="nav-text">JDK8 resize()</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get%E6%96%B9%E6%B3%95"><span class="nav-number">1.5.</span> <span class="nav-text">get方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7"><span class="nav-number">1.5.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-1"><span class="nav-number">1.5.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ConcurrentHashMap"><span class="nav-number">2.</span> <span class="nav-text">ConcurrentHashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-1"><span class="nav-number">2.1.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-2"><span class="nav-number">2.1.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E5%B1%9E%E6%80%A7-1"><span class="nav-number">2.2.</span> <span class="nav-text">基础属性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-2"><span class="nav-number">2.2.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-3"><span class="nav-number">2.2.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.3.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-3"><span class="nav-number">2.3.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-4"><span class="nav-number">2.3.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#put"><span class="nav-number">2.4.</span> <span class="nav-text">put</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-4"><span class="nav-number">2.4.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-5"><span class="nav-number">2.4.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E6%95%B0"><span class="nav-number">2.5.</span> <span class="nav-text">计数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK1-7-5"><span class="nav-number">2.5.1.</span> <span class="nav-text">JDK1.7</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-6"><span class="nav-number">2.5.2.</span> <span class="nav-text">JDK8</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A9%E5%AE%B9-1"><span class="nav-number">2.6.</span> <span class="nav-text">扩容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#JDK8-7"><span class="nav-number">2.6.1.</span> <span class="nav-text">JDK8</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ChangZhen"
+      src="/images/head_icon.jpg">
+  <p class="site-author-name" itemprop="name">ChangZhen</p>
+  <div class="site-description" itemprop="description">不忘初心，方得始终</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ChangZhen</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
